@@ -42,6 +42,9 @@ public class NPCBehaviour : MonoBehaviour
     // The curret eating area the agent is going to
     private Transform currentEatingArea;
 
+    // The table chosen by the agent when he goes to eat
+    private Table chosenTable;
+
     // Reference to our Nav Mesh Agent
     private NavMeshAgent agent;
 
@@ -79,6 +82,9 @@ public class NPCBehaviour : MonoBehaviour
         // Initialize `agent` by getting the NavMeshAgent component
         agent = this.GetComponent<NavMeshAgent>();
 
+        // Initialize the chosen table as null
+        chosenTable = null;
+
         // Define the initial values for the excitement level
         excitementLevel = 0f;
         // Define the step amount for the excitement level
@@ -87,12 +93,12 @@ public class NPCBehaviour : MonoBehaviour
         // Define the initial values for the stamina level
         staminaLevel = 30f; // Random.Range(50f, 100f);
         // Define the step amount for the stamina level
-        staminaStep = Random.Range(1f, 3f);
+        staminaStep = 0; // Random.Range(1f, 3f);
 
         // Define the initial values for the fullness level
         fullnessLevel = Random.Range(25f, 90f);
         // Define the step amount for the fullness level
-        fullnessSpet = Random.Range(0f, .01f);
+        fullnessSpet = Random.Range(1f, 3f);
 
         // Define the multiplier for resting and eating
         multiplier = Random.Range(3f, 6f);
@@ -123,7 +129,85 @@ public class NPCBehaviour : MonoBehaviour
     /// Makes the agent go eat till he's full again
     /// </summary>
     private void AgentGoEat() {
-        
+        // If the agent hasn't selected an eating area yet
+        if (currentEatingArea == null)
+        {
+            // Select a random eating area from the two available
+            TablesManager eatingArea = 
+                Random.Range(1f, 100f) > 50 ? eatingAreas[0] : eatingAreas[1];
+
+            // Create a new byte to know the number of people sitting at the currently chosen table
+            byte numPeopleSitting = 10;
+
+            // Logic to chose the table with less people on it
+            foreach (Table t in eatingArea.Tables)
+            {
+                // If the agent hasn't choosen a table yet
+                if (chosenTable == null)
+                {
+                    // Set the table to the first in the list
+                    chosenTable = t;
+                }
+
+                // If the number of people sitting at the current table is greater than at table `t`
+                if (numPeopleSitting > chosenTable.TakenSeats.Count)
+                {
+                    // Set the `numPeopleSitting` to be the table `t` number of taken seats
+                    numPeopleSitting = (byte)chosenTable.TakenSeats.Count;
+
+                    // Set the chose table to be the table `t`
+                    chosenTable = t;
+                }
+            }
+
+            // If the chosen table has not seats left return to try again
+            if (chosenTable.AvailableSeats.Count == 0)
+            {
+                return;
+            }
+
+            // Set the current eating area to be the seat on the table we want
+            currentEatingArea = chosenTable.AvailableSeats[0];
+
+            // Remove the chosen seat from the available list
+            chosenTable.AvailableSeats.Remove(currentEatingArea);
+
+            // Add it to the taken list
+            chosenTable.TakenSeats.Add(currentEatingArea);
+
+            // Move the agent to the seat
+            agent.destination = currentEatingArea.position;
+        }
+
+        // If we've reached the destination and our `fullnessLevel` is less than the maximum
+        if (agent.remainingDistance < 1 && fullnessLevel < maximumFullnessLevel)
+        {
+            // We're currently eating
+            isEating = true;
+
+            // Increase the `fullnessLevel` each second based on the `(fullnessStep * multiplier)`
+            fullnessLevel = Mathf.Min(
+                fullnessLevel + ((fullnessSpet * multiplier) * Time.deltaTime),
+                maximumFullnessLevel);
+
+        }   // If the `fullnessLevel` is at maximum
+        else if (fullnessLevel >= maximumFullnessLevel)
+        {
+            // We finished eating so the seat will now be available
+            // Add it to the available seats list
+            chosenTable.AvailableSeats.Add(currentEatingArea);
+            // Remove it from the taken seats list
+            chosenTable.TakenSeats.Remove(currentEatingArea);
+
+            // Set the current eating area to null
+            currentEatingArea = null;
+
+            // We're no longer eating
+            isEating = false;
+
+            // Start moving the agent to the stage
+            StartCoroutine(MoveToCurrentStage());
+        }
     }
 
     /// <summary>
@@ -137,24 +221,29 @@ public class NPCBehaviour : MonoBehaviour
     /// </summary>
     private void AgentGoRest()
     {
-        StopAllCoroutines();
-
+        // If we don't currently have a resting area assigned
         if (currentRestingArea == null)
         {
+            // Choses randomly between the two available resting areas
             currentRestingArea = Random.Range(1, 100) > 50 ? restingAreas[0] : restingAreas[1];
+            
+            // Sets the agent destination to be that resting area
             agent.destination = currentRestingArea.position;
         }
 
-        print(agent.destination + " | " + currentRestingArea.position);
-
+        // If we've reached the destination and our `staminaLevel` is less than the maximum
         if (agent.remainingDistance < 1 && staminaLevel < maximumStaminaLevel)
         {
-            print(1);
+            // We're currently resting
             isResting = true;
+
+            // Increase the `staminaLevel` each second based on the `(staminaStep * multiplier)`
             staminaLevel = Mathf.Min(
                 staminaLevel + ((staminaStep * multiplier) * Time.deltaTime),
                 maximumStaminaLevel);
-        } else if (staminaLevel >= maximumStaminaLevel)
+
+        }   // If the `staminaLevel` is at maximum
+        else if (staminaLevel >= maximumStaminaLevel)
         {
             currentRestingArea = null;
             isResting = false;
@@ -174,25 +263,38 @@ public class NPCBehaviour : MonoBehaviour
     /// </summary>
     private void AgentChangeStage()
     {
+        // Get a new random float between 1 and 100
         float stageSelect = Random.Range(1, 100);
 
-        Vector3 currentStagePosition;
-
+        // If the current stage is null
         if (currentStage == null)
         {
+            // Select one of the three stages, with the bigger ones having a higher chance
             currentStage = stageSelect > 60 ? stages[0] : stageSelect > 28 ? stages[1] : stages[2];
-        } else
+        
+        } // If the current stage is not null
+        else
         {
-            currentStagePosition = currentStage.position;
-
-            while (currentStage.position == currentStagePosition)
+            // Check what stage the agent is currently on to go to another
+            if (currentStage == stages[0])
             {
-                currentStage = stageSelect > 60 ? stages[0] : stageSelect > 28 ? stages[1] : stages[2];
+                // If it's the stage 0 we can go to the stage 1 or 2
+                currentStage = stageSelect > 40 ? stages[1] : stages[2];
+            }
+            else if (currentStage == stages[1])
+            {
+                // If it's the stage 1 we can go to the stage 0 or 2
+                currentStage = stageSelect > 40 ? stages[0] : stages[2];
+            }
+            else
+            {
+                // If it's the stage 2 we can go to the stage 0 or 1
+                currentStage = stageSelect > 40 ? stages[0] : stages[1];
             }
         }
 
         // Increasse the excitement level when we switch stage
-        excitementLevel = Random.Range(80f, 90f);
+        excitementLevel = Random.Range(90f, 100f);
 
         StartCoroutine(MoveToCurrentStage());
     }
@@ -201,9 +303,12 @@ public class NPCBehaviour : MonoBehaviour
     {
         do
         {
+            // Move the aget to the current stage
             agent.destination = currentStage.position;
+
+            // Wait a frame
             yield return null;
-        } while (true);
+        } while (fullnessLevel != 0f && !isEating && staminaLevel != 0f && !isResting);
     }
 
     /// <summary>

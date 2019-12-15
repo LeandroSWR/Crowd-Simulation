@@ -11,7 +11,7 @@ public class Table : MonoBehaviour
     public List<Transform> AvailableSeats { get; set; }
 
     // Array of all the taken seats
-    public Transform[] TakenSeats { get; set; }
+    public List<Transform> TakenSeats { get; set; }
 
     // The maximum number of agents that can be eating at this table
     private float maxAgentsSupported;
@@ -28,7 +28,7 @@ public class Table : MonoBehaviour
         AvailableSeats = new List<Transform>(tableSeats);
 
         // Start the array of taken seat with the size of the total seats
-        TakenSeats = new Transform[tableSeats.Length];
+        TakenSeats = new List<Transform>(tableSeats.Length);
 
         // The number of agents a table supports is equal to the number of seats it has
         maxAgentsSupported = tableSeats.Length;
