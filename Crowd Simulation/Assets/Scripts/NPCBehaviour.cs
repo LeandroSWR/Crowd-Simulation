@@ -6,8 +6,8 @@ using LibGameAI.DecisionTrees;
 public class NPCBehaviour : MonoBehaviour
 {
     // Arrays with the location of all areas of interest
-    [SerializeField] private Transform[] eatingAreas;
-    [SerializeField] private TablesManager[] restingAreas;
+    [SerializeField] private TablesManager[] eatingAreas;
+    [SerializeField] private Transform[] restingAreas;
     [SerializeField] private Transform[] stages;
 
     // How fast the agent moves
@@ -35,6 +35,12 @@ public class NPCBehaviour : MonoBehaviour
 
     // The current stage the agent is watching
     private Transform currentStage;
+
+    // The current resting area the agent is going to
+    private Transform currentRestingArea;
+
+    // The curret eating area the agent is going to
+    private Transform currentEatingArea;
 
     // Reference to our Nav Mesh Agent
     private NavMeshAgent agent;
@@ -79,14 +85,17 @@ public class NPCBehaviour : MonoBehaviour
         excitementStep = Random.Range(1f, 3f);
 
         // Define the initial values for the stamina level
-        staminaLevel = Random.Range(50f, 100f);
+        staminaLevel = 30f; // Random.Range(50f, 100f);
         // Define the step amount for the stamina level
         staminaStep = Random.Range(1f, 3f);
 
         // Define the initial values for the fullness level
         fullnessLevel = Random.Range(25f, 90f);
         // Define the step amount for the fullness level
-        fullnessSpet = Random.Range(1f, 4f);
+        fullnessSpet = Random.Range(0f, .01f);
+
+        // Define the multiplier for resting and eating
+        multiplier = Random.Range(3f, 6f);
     }
 
     /// <summary>
@@ -97,8 +106,11 @@ public class NPCBehaviour : MonoBehaviour
         (isAgentHungry.MakeDecision() as ActionNode).Execute();
 
         UpdateExcitementLevel();
-        UpdateStaminaLevel();
-        UpdateFullness();
+        
+        if (!isResting)
+            UpdateStaminaLevel();
+        if (!isEating)
+            UpdateFullness();
     }
 
     /// <summary>
@@ -125,7 +137,30 @@ public class NPCBehaviour : MonoBehaviour
     /// </summary>
     private void AgentGoRest()
     {
+        StopAllCoroutines();
 
+        if (currentRestingArea == null)
+        {
+            currentRestingArea = Random.Range(1, 100) > 50 ? restingAreas[0] : restingAreas[1];
+            agent.destination = currentRestingArea.position;
+        }
+
+        print(agent.destination + " | " + currentRestingArea.position);
+
+        if (agent.remainingDistance < 1 && staminaLevel < maximumStaminaLevel)
+        {
+            print(1);
+            isResting = true;
+            staminaLevel = Mathf.Min(
+                staminaLevel + ((staminaStep * multiplier) * Time.deltaTime),
+                maximumStaminaLevel);
+        } else if (staminaLevel >= maximumStaminaLevel)
+        {
+            currentRestingArea = null;
+            isResting = false;
+
+            StartCoroutine(MoveToCurrentStage());
+        }
     }
 
     /// <summary>
