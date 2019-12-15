@@ -195,6 +195,9 @@ public class NPCBehaviour : MonoBehaviour
             // The agent is not stoped while moving to a table
             agent.isStopped = false;
 
+            // We're not close to the stage
+            HasReachedStage = false;
+
         } // If we've reached the destination and our `fullnessLevel` is less than the maximum
         else if (Vector3.Distance(transform.position, currentEatingArea.position) < 2f && 
             fullnessLevel < maximumFullnessLevel)
@@ -293,6 +296,9 @@ public class NPCBehaviour : MonoBehaviour
             // If the current stage is null
             if (currentStage == null)
             {
+                // The agent can move to the stage again
+                agent.isStopped = false;
+
                 // Select one of the three stages, with the bigger ones having a higher chance
                 currentStage = stageSelect > 60 ? stages[0] : stageSelect > 28 ? stages[1] : stages[2];
 
@@ -300,7 +306,7 @@ public class NPCBehaviour : MonoBehaviour
                 agent.SetDestination(currentStage.position);
 
             } // If the distance from the agent to the target position is less than 3
-            else if (Vector3.Distance(transform.position, currentStage.position) <= 3f)
+            else if (Vector3.Distance(transform.position, currentStage.position) < 2.5f)
             {
                 // The agent has reached the stage
                 HasReachedStage = true;
