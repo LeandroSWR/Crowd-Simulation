@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.AI;
+using System.Collections;
 using LibGameAI.DecisionTrees;
 
 public class NPCBehaviour : MonoBehaviour
@@ -12,25 +13,28 @@ public class NPCBehaviour : MonoBehaviour
     // How fast the agent moves
     [SerializeField] private float speed = 10f;
 
-    // How much excitement the agent can have
-    private readonly float maximumExcitementLevel = 100f;
+    
+    private readonly float maximumExcitementLevel = 100f;   // How much excitement the agent can have
     private float excitementLevel;  // The current level of excitement
     private float excitementStep;   // How much the excitement decreases each second
 
-    // How much stamina the agent can have
-    private readonly float maximumStaminaLevel = 100f;
+    
+    private readonly float maximumStaminaLevel = 100f;  // How much stamina the agent can have
     private float staminaLevel; // The current level of stamina 
     private float staminaStep;  // How much the stamina decreases each second
     private bool isResting; // If the agent is currently resting
 
-    // How full the agent can be
-    private readonly float maximumFullnessLevel = 100f;
+    
+    private readonly float maximumFullnessLevel = 100f; // How full the agent can be
     private float fullnessLevel;    // The current level of fullness
     private float fullnessSpet; // How much the fullness decreases each second
     private bool isEating;  // If the agent is currently eating
 
     // The multiplier for increasing the values when resting or eating
     private float multiplier;
+
+    // The current stage the agent is watching
+    private Transform currentStage;
 
     // Reference to our Nav Mesh Agent
     private NavMeshAgent agent;
@@ -49,11 +53,15 @@ public class NPCBehaviour : MonoBehaviour
     private void Awake()
     {
         agentIsHungry = new ActionNode(AgentGoEat);
+        
         agentIsTired = new ActionNode(AgentGoRest);
+        
         agentNotExcited = new ActionNode(AgentChangeStage);
 
         isAgentExcited = new DecisionNode(IsAgentExcited, new ActionNode(() => { }), agentNotExcited);
+        
         isAgentTired = new DecisionNode(IsAgentTired, agentIsTired, isAgentExcited);
+        
         isAgentHungry = new DecisionNode(IsAgentHungry, agentIsHungry, isAgentTired);
     }
 
@@ -97,7 +105,7 @@ public class NPCBehaviour : MonoBehaviour
     /// Checks if the agent is currently hungry
     /// </summary>
     /// <returns>True if the agent is hungry or eating, false otherwise</returns>
-    private bool IsAgentHungry() => fullnessLevel == 0 || isEating;
+    private bool IsAgentHungry() => fullnessLevel == 0f || isEating;
 
     /// <summary>
     /// Makes the agent go eat till he's full again
@@ -110,7 +118,7 @@ public class NPCBehaviour : MonoBehaviour
     /// Checks if the agent is currently tired
     /// </summary>
     /// <returns>True if the agent is tired or resting, false otherwise</returns>
-    private bool IsAgentTired() => staminaLevel == 0 || isResting;
+    private bool IsAgentTired() => staminaLevel == 0f || isResting;
 
     /// <summary>
     /// Makes the agent go rest till he's got stamina again
@@ -124,14 +132,43 @@ public class NPCBehaviour : MonoBehaviour
     /// Checks if the agent is currently excited
     /// </summary>
     /// <returns>True if the agent is excited, false otherwise</returns>
-    private bool IsAgentExcited() => excitementLevel > 0;
+    private bool IsAgentExcited() => excitementLevel > 0f;
 
     /// <summary>
     /// Makes the agent go to another stage
     /// </summary>
     private void AgentChangeStage()
     {
+        float stageSelect = Random.Range(1, 100);
 
+        Vector3 currentStagePosition;
+
+        if (currentStage == null)
+        {
+            currentStage = stageSelect > 60 ? stages[0] : stageSelect > 28 ? stages[1] : stages[2];
+        } else
+        {
+            currentStagePosition = currentStage.position;
+
+            while (currentStage.position == currentStagePosition)
+            {
+                currentStage = stageSelect > 60 ? stages[0] : stageSelect > 28 ? stages[1] : stages[2];
+            }
+        }
+
+        // Increasse the excitement level when we switch stage
+        excitementLevel = Random.Range(80f, 90f);
+
+        StartCoroutine(MoveToCurrentStage());
+    }
+
+    private IEnumerator MoveToCurrentStage()
+    {
+        do
+        {
+            agent.destination = currentStage.position;
+            yield return null;
+        } while (true);
     }
 
     /// <summary>
