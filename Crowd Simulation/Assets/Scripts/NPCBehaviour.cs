@@ -12,19 +12,19 @@ public class NPCBehaviour : MonoBehaviour
 
     // How fast the agent moves
     [SerializeField] private float speed = 10f;
-
     
+    // Boredom behaviour variables
     private readonly float maximumExcitementLevel = 100f;   // How much excitement the agent can have
     private float excitementLevel;  // The current level of excitement
     private float excitementStep;   // How much the excitement decreases each second
 
-    
+    // Tiredness behaviour variables
     private readonly float maximumStaminaLevel = 100f;  // How much stamina the agent can have
     private float staminaLevel; // The current level of stamina 
     private float staminaStep;  // How much the stamina decreases each second
     private bool isResting; // If the agent is currently resting
 
-    
+    // Hungriness behaviour variables
     private readonly float maximumFullnessLevel = 100f; // How full the agent can be
     private float fullnessLevel;    // The current level of fullness
     private float fullnessSpet; // How much the fullness decreases each second
@@ -55,11 +55,24 @@ public class NPCBehaviour : MonoBehaviour
     private NavMeshAgent agent;
 
 
+    // Action and Decision Nodes \\
+
+    // Decision node if the agent is hungry
     private IDecisionTreeNode isAgentHungry;
+
+    // Action node in case the agent is hungry
     private IDecisionTreeNode agentIsHungry;
+
+    // Decision node if the agent is tired
     private IDecisionTreeNode isAgentTired;
+
+    // Action node in case the agent is tired
     private IDecisionTreeNode agentIsTired;
+
+    // Decision node if the agent is excited
     private IDecisionTreeNode isAgentExcited;
+
+    // Action node in case the agent is not excited
     private IDecisionTreeNode agentNotExcited;
 
     /// <summary>
@@ -67,16 +80,22 @@ public class NPCBehaviour : MonoBehaviour
     /// </summary>
     private void Awake()
     {
+        // Create a new action node for the agent eating behaviour
         agentIsHungry = new ActionNode(AgentGoEat);
-        
+
+        // Create a new action node for the agent resting behaviour
         agentIsTired = new ActionNode(AgentGoRest);
-        
+
+        // Create a new action node for the agent change stage behaviour
         agentNotExcited = new ActionNode(AgentChangeStage);
 
+        // Create a new decision node to know if the agent is excited
         isAgentExcited = new DecisionNode(IsAgentExcited, new ActionNode(() => { }), agentNotExcited);
-        
+
+        // Create a new decision node to know if the agent is tired
         isAgentTired = new DecisionNode(IsAgentTired, agentIsTired, isAgentExcited);
-        
+
+        // Create a new decision node to know if the agent is hungry
         isAgentHungry = new DecisionNode(IsAgentHungry, agentIsHungry, isAgentTired);
     }
 
@@ -89,7 +108,7 @@ public class NPCBehaviour : MonoBehaviour
         agent = this.GetComponent<NavMeshAgent>();
 
         // After colliding with someone the agent will keep pushing forward for 2 seconds
-        pushFor = new WaitForSeconds(0.5f);
+        pushFor = new WaitForSeconds(0.3f);
 
         // Initialize the chosen table as null
         chosenTable = null;
@@ -103,7 +122,7 @@ public class NPCBehaviour : MonoBehaviour
         excitementStep = Random.Range(1f, 3f);
 
         // Define the initial values for the stamina level
-        staminaLevel = 30f; // Random.Range(50f, 100f);
+        staminaLevel = Random.Range(50f, 100f);
         // Define the step amount for the stamina level
         staminaStep = 0; // Random.Range(1f, 3f);
 
@@ -113,7 +132,7 @@ public class NPCBehaviour : MonoBehaviour
         fullnessSpet = Random.Range(0.5f, 3f);
 
         // Define the multiplier for resting and eating
-        multiplier = Random.Range(3f, 6f);
+        multiplier = Random.Range(4f, 6f);
     }
 
     /// <summary>
@@ -149,9 +168,6 @@ public class NPCBehaviour : MonoBehaviour
         // If the agent hasn't selected an eating area yet
         if (currentEatingArea == null)
         {
-            // If the agent hasn't decided on a table yet he will stop moving
-            agent.isStopped = true;
-
             // Select a random eating area from the two available
             TablesManager eatingArea = 
                 Random.Range(1f, 100f) > 50 ? eatingAreas[0] : eatingAreas[1];
@@ -191,9 +207,6 @@ public class NPCBehaviour : MonoBehaviour
 
             // Move the agent to the seat
             agent.SetDestination(currentEatingArea.position);
-
-            // The agent is not stoped while moving to a table
-            agent.isStopped = false;
 
             // We're not close to the stage
             HasReachedStage = false;
@@ -269,9 +282,16 @@ public class NPCBehaviour : MonoBehaviour
         }   // If the `staminaLevel` is at maximum
         else if (staminaLevel >= maximumStaminaLevel)
         {
+            // Set the `currentRestingArea` to null
             currentRestingArea = null;
+
+            // The agent is no longer resting
             isResting = false;
+
+            // The agent has not yet reached the stage
             HasReachedStage = false;
+
+            // Set the excitement level to 0
             excitementLevel = 0;
         }
     }
@@ -287,49 +307,42 @@ public class NPCBehaviour : MonoBehaviour
     /// </summary>
     private void AgentChangeStage()
     {
-        // If the agent isn't hungry or tiered
-        if (fullnessLevel > 1f && !isEating && staminaLevel > 1f && !isResting)
+        // Get a new random float between 1 and 100
+        float stageSelect = Random.Range(1, 100);
+
+        // If the current stage is null
+        if (currentStage == null)
         {
-            // Get a new random float between 1 and 100
-            float stageSelect = Random.Range(1, 100);
+            // Select one of the three stages, with the bigger ones having a higher chance
+            currentStage = stageSelect > 60 ? stages[0] : stageSelect > 28 ? stages[1] : stages[2];
 
-            // If the current stage is null
-            if (currentStage == null)
-            {
-                // The agent can move to the stage again
-                agent.isStopped = false;
+            // Move the agent to the current stage
+            agent.SetDestination(currentStage.position);
 
-                // Select one of the three stages, with the bigger ones having a higher chance
-                currentStage = stageSelect > 60 ? stages[0] : stageSelect > 28 ? stages[1] : stages[2];
+        } else if (Vector3.Distance(transform.position, currentStage.position) > 2.5f)
+        {
+            // Move the agent to the current stage
+            agent.SetDestination(currentStage.position);
 
-                // Move the agent to the current stage
-                agent.SetDestination(currentStage.position);
+        } // If the distance from the agent to the target position is less than 3
+        else if (Vector3.Distance(transform.position, currentStage.position) < 2.5f)
+        {
+            // The agent has reached the stage
+            HasReachedStage = true;
 
-            } // If the distance from the agent to the target position is less than 3
-            else if (Vector3.Distance(transform.position, currentStage.position) < 2.5f)
-            {
-                // The agent has reached the stage
-                HasReachedStage = true;
+            // Increasse the excitement level when we switch stage
+            excitementLevel = Random.Range(90f, 100f);
 
-                // Increasse the excitement level when we switch stage
-                excitementLevel = Random.Range(90f, 100f);
+            // Set the current stage to null
+            currentStage = null;
+        }
+        else if (HasReachedStage)
+        {
+            // Increasse the excitement level when we switch stage
+            excitementLevel = Random.Range(90f, 100f);
 
-                // Set the current stage to null
-                currentStage = null;
-
-                // The agent stops moving
-                agent.isStopped = true;
-            } else if (HasReachedStage)
-            {
-                // Increasse the excitement level when we switch stage
-                excitementLevel = Random.Range(90f, 100f);
-
-                // Set the current stage to null
-                currentStage = null;
-
-                // If the agent has reached the stage he will stop moving
-                agent.isStopped = true;
-            }
+            // Set the current stage to null
+            currentStage = null;
         }
     }
 
@@ -338,9 +351,20 @@ public class NPCBehaviour : MonoBehaviour
     /// </summary>
     private void UpdateExcitementLevel()
     {
+        // Clamp the excitement level between 0 and `maximumExcitementLevel`
         excitementLevel = Mathf.Clamp(
             excitementLevel - (excitementStep * Time.deltaTime),
             0f, maximumExcitementLevel);
+
+        if (HasReachedStage)
+        {
+            // If the agent has reached the stage he will stop moving
+            agent.isStopped = true;
+        } else
+        {
+            // If the agent has not reached the stage he will move
+            agent.isStopped = false;
+        }
     }
 
     /// <summary>
@@ -348,6 +372,7 @@ public class NPCBehaviour : MonoBehaviour
     /// </summary>
     private void UpdateStaminaLevel()
     {
+        // Clamp the stamina level between 0 and `maximumStaminaLevel`
         staminaLevel = Mathf.Clamp(
             staminaLevel - (staminaStep * Time.deltaTime),
             0f, maximumStaminaLevel);
@@ -358,6 +383,7 @@ public class NPCBehaviour : MonoBehaviour
     /// </summary>
     private void UpdateFullness()
     {
+        // Clamp the fullness level between 0 and `maximumFullnessLevel`
         fullnessLevel = Mathf.Clamp(
             fullnessLevel - (fullnessSpet * Time.deltaTime),
             0f, maximumFullnessLevel);
@@ -369,12 +395,16 @@ public class NPCBehaviour : MonoBehaviour
     /// <param name="other">The collider of the other agent</param>
     private void OnCollisionEnter(Collision other)
     {
+        // If the agent collided with another npc
         if (other.transform.CompareTag("NPC"))
         {
+            // And that npc is on a stage
             if (other.transform.GetComponent<NPCBehaviour>().HasReachedStage)
             {
+                // If the agent is not yet on a stage
                 if (!HasReachedStage)
                 {
+                    // Start a corroutine
                     StartCoroutine(StopPushing());
                 }
             }
@@ -390,10 +420,11 @@ public class NPCBehaviour : MonoBehaviour
         // Waits for some seconds
         yield return pushFor;
 
-        // The agent has reached the stage
-        HasReachedStage = true;
-
-        // The agent stops moving
-        agent.isStopped = true;
+        // If the agent is currently moving towards a stage
+        if (currentStage != null && agent.destination == currentStage.position)
+        {
+            // The agent has reached the stage
+            HasReachedStage = true;
+        }
     }
 }
