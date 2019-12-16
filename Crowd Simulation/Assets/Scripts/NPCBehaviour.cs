@@ -168,31 +168,30 @@ public class NPCBehaviour : MonoBehaviour
         // If the agent hasn't selected an eating area yet
         if (currentEatingArea == null)
         {
+            // The agent is stoped while he chooses a table
+            agent.isStopped = true;
+
             // Select a random eating area from the two available
             TablesManager eatingArea = 
                 Random.Range(1f, 100f) > 50 ? eatingAreas[0] : eatingAreas[1];
 
-            // Logic to chose the table with less people on it
+            // Set the table to the first in the list
+            chosenTable = eatingArea.Tables[0];
+
+            // Logic to choose the table with less people on it
             foreach (Table t in eatingArea.Tables)
             {
-                // If the agent hasn't choosen a table yet
-                if (chosenTable == null)
-                {
-                    // Set the table to the first in the list
-                    chosenTable = t;
-                }
-
                 // If the number of people sitting at the current table is greater than at table `t`
                 if (chosenTable.TakenSeats.Count > t.TakenSeats.Count)
                 {
-                    // Set the chose table to be the table `t`
+                    // Set the chosen table to be the table `t`
                     chosenTable = t;
                 }
             }
             
             if (chosenTable.AvailableSeats.Count == 0)
             {
-                // Return to chose another table
+                // Return to choose another table
                 return;
             }
 
@@ -210,6 +209,15 @@ public class NPCBehaviour : MonoBehaviour
 
             // We're not close to the stage
             HasReachedStage = false;
+
+            // The agent will move after choosing a table
+            agent.isStopped = false;
+
+        } // If the agent has't reached the objective yet
+        else if (Vector3.Distance(transform.position, currentEatingArea.position) > 2f)
+        {
+            // Move the agent to the seat
+            agent.SetDestination(currentEatingArea.position);
 
         } // If we've reached the destination and our `fullnessLevel` is less than the maximum
         else if (Vector3.Distance(transform.position, currentEatingArea.position) < 2f && 
@@ -319,7 +327,8 @@ public class NPCBehaviour : MonoBehaviour
             // Move the agent to the current stage
             agent.SetDestination(currentStage.position);
 
-        } else if (Vector3.Distance(transform.position, currentStage.position) > 2.5f)
+        } // If the agent has't reached the objective yet
+        else if (Vector3.Distance(transform.position, currentStage.position) > 2.5f)
         {
             // Move the agent to the current stage
             agent.SetDestination(currentStage.position);
