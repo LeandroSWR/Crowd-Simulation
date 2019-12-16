@@ -24,9 +24,21 @@ public class ExplosionManager : MonoBehaviour {
     // The explosion's prefab object
     [SerializeField] private Transform explosionPrefab;
 
-    [Header("NPC's Parent")]
-    // The agents' parent object
-    [SerializeField] private Transform agentsParent;
+    [Header("Explosion Spawn Points")]
+    // The parent of the explosions spawners
+    [SerializeField] private Transform spawnsParent;
+
+    // The spawns for all explosions
+    private List<Transform> explosionSpawns;
+
+    /// <summary>
+    /// Awake is called before the game starts
+    /// </summary>
+    private void Awake() {
+
+        // Get all spawns whilst loading
+        GetSpanws();
+    }
 
     /// <summary>
     /// Update is called once per frame
@@ -38,6 +50,21 @@ public class ExplosionManager : MonoBehaviour {
     }
 
     /// <summary>
+    /// Sets all spawns for the explosions
+    /// </summary>
+    private void GetSpanws() {
+
+        // Initiate the List of spawns
+        explosionSpawns = new List<Transform>();
+
+        // Fill the spawns with each child of their parent
+        foreach(Transform child in spawnsParent) {
+
+            explosionSpawns.Add(child);
+        }
+    }
+
+    /// <summary>
     /// Detect the Player's Input
     /// </summary>
     private void CheckInput() {
@@ -46,30 +73,23 @@ public class ExplosionManager : MonoBehaviour {
         if (Input.GetKeyDown(explosionKey)) {
 
             // Select a random NPC to Instantiate an explosion
-            SelectTerrorist();
+            SelectExplosionLocation();
         }
     }
 
     /// <summary>
     /// Selects which NPC will explode
     /// </summary>
-    private void SelectTerrorist() {
+    private void SelectExplosionLocation() {
 
         // Get a random index based on the number of NPCs
-        int npcIndex = Random.Range(0, 500);
+        int npcIndex = Random.Range(0, explosionSpawns.Count);
 
         // Get the 'ExplosionBehaviour' script attached to the newly Instantiated explosion GameObject
         ExplosionBehaviour eb = 
             Instantiate(explosionPrefab,
-            agentsParent.GetChild(npcIndex).position,
+            spawnsParent.GetChild(npcIndex).position,
             Quaternion.identity).GetComponent<ExplosionBehaviour>();
-
-        if (!eb.gameObject.activeSelf) {
-
-            Destroy(eb.gameObject);
-            SelectTerrorist();
-            return;
-        }
 
         // Pass variables from this script towards the last explosion
         eb.AssignVariables(explosionSpeed, fireSpeed, killRadius, stunRadius, panicRadius, maxRadius);

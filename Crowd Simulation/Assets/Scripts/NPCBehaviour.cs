@@ -60,9 +60,11 @@ public class NPCBehaviour : MonoBehaviour
     // Property to set this agent as stunned
     public bool IsStunned { get; set; }
 
+    // The timer for the Stun
+    private float stunTime = 1.5f;
+
     // Reference to our Nav Mesh Agent
     private NavMeshAgent agent;
-
 
     // Action and Decision Nodes \\
 
@@ -137,7 +139,10 @@ public class NPCBehaviour : MonoBehaviour
     void Start()
     {
         // Initialize `agent` by getting the NavMeshAgent component
-        agent = this.GetComponent<NavMeshAgent>();
+        agent = GetComponent<NavMeshAgent>();
+
+        // Assign this speed as the agent's speed
+        agent.speed = speed;
 
         // After colliding with someone the agent will keep pushing forward for 2 seconds
         pushFor = new WaitForSeconds(0.3f);
@@ -201,8 +206,19 @@ public class NPCBehaviour : MonoBehaviour
     /// </summary>
     private void Stun() {
 
-        // Reduce his speed by half
-        agent.speed = speed / 2.0f;
+        // Verify if stun time can still be reduced
+        if (stunTime > 0.0f) {
+
+            // Reduce stun time
+            stunTime -= Time.fixedDeltaTime;
+
+        } else {
+
+            // Reduce his speed by half
+            agent.speed = speed / 2.0f;
+            stunTime = 1.5f;
+            IsStunned = false;
+        }
     }
 
     /// <summary>
