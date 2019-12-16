@@ -4,27 +4,36 @@ using UnityEngine;
 
 public class ExplosionManager : MonoBehaviour {
 
+    [Header("Key")]
     // The Keyboard's key to trigger explosions
     [SerializeField] private KeyCode explosionKey;
 
+    [Header("Speeds")]
     // The Explosions speeds
     [SerializeField] private float explosionSpeed;
     [SerializeField] private float fireSpeed;
 
+    [Header("Radiuses")]
     // All Explosions radiuses
     [SerializeField] private float killRadius;  // The radius at which NPC's get killed
     [SerializeField] private float stunRadius;  // The radius at which NPC's get stunned
     [SerializeField] private float panicRadius; // The radius at which NPC's start panicking
     [SerializeField] private float maxRadius;   // The radius at which the Explosions stop
 
+    [Header("Explosion Prefab")]
     // The explosion's prefab object
     [SerializeField] private Transform explosionPrefab;
 
+    [Header("NPC's Parent")]
     // The agents' parent object
     [SerializeField] private Transform agentsParent;
 
+    /// <summary>
+    /// Update is called once per frame
+    /// </summary>
     void Update() {
 
+        // Checks for User input every frame
         CheckInput();
     }
 
@@ -54,6 +63,13 @@ public class ExplosionManager : MonoBehaviour {
             Instantiate(explosionPrefab,
             agentsParent.GetChild(npcIndex).position,
             Quaternion.identity).GetComponent<ExplosionBehaviour>();
+
+        if (!eb.gameObject.activeSelf) {
+
+            Destroy(eb.gameObject);
+            SelectTerrorist();
+            return;
+        }
 
         // Pass variables from this script towards the last explosion
         eb.AssignVariables(explosionSpeed, fireSpeed, killRadius, stunRadius, panicRadius, maxRadius);

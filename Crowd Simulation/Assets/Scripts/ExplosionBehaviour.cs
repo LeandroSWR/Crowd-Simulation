@@ -21,6 +21,9 @@ public class ExplosionBehaviour : MonoBehaviour {
     // The current explosion radius
     private float currentRadius;
 
+    /// <summary>
+    /// Awake is called before the game starts
+    /// </summary>
     private void Awake() {
 
         // Reposition the explosion prefab accordingly
@@ -29,6 +32,9 @@ public class ExplosionBehaviour : MonoBehaviour {
                                          transform.position.z);
     }
 
+    /// <summary>
+    /// Update is called once per frame
+    /// </summary>
     void Update() {
 
         // Spread the fire / Change scale
@@ -97,27 +103,39 @@ public class ExplosionBehaviour : MonoBehaviour {
     public void Explode() {
 
         // Gets all colliders around this GameObject
-        Collider[] npcs = Physics.OverlapSphere(transform.position, killRadius);
+        Collider[] npcs = Physics.OverlapSphere(transform.position, maxRadius);
 
         // Iterates through all Colliders found...
-        foreach(Collider c in npcs) {
+        foreach(Collider npc in npcs) {
 
             // ...finds the ones with the 'NPC' tag...
-            if (c.CompareTag("NPC")) {
+            if (npc.CompareTag("NPC")) {
 
-                // ...disables Behaviours and AI based movement...
-                c.GetComponent<NPCBehaviour>().enabled = false;
-                c.GetComponent<NavMeshAgent>().enabled = false;
+                if (Vector3.Distance(transform.position, npc.transform.position) <= killRadius) {
 
-                // ...fetches the colliders' Rigidbody...
-                Rigidbody otherRb = c.GetComponent<Rigidbody>();
+                    // ...disables Behaviours and AI based movement...
+                    npc.GetComponent<NPCBehaviour>().enabled = false;
+                    npc.GetComponent<NavMeshAgent>().enabled = false;
 
-                // ...changes rigidbody settings so that Physics can work on them...
-                otherRb.isKinematic = false;
-                otherRb.useGravity = true;
+                    // ...fetches the colliders' Rigidbody...
+                    Rigidbody otherRb = npc.GetComponent<Rigidbody>();
 
-                // ...and adds an explosion force based on the center of the explosion
-                otherRb.AddExplosionForce(100000, transform.position, killRadius, 50000);
+                    // ...changes rigidbody settings so that Physics can work on them...
+                    otherRb.isKinematic = false;
+                    otherRb.useGravity = true;
+
+                    // ...and adds an explosion force based on the center of the explosion
+                    otherRb.AddExplosionForce(100000, transform.position, killRadius, 50000);
+
+                } else if (Vector3.Distance(transform.position, npc.transform.position) <= stunRadius) {
+
+                    npc.GetComponent<NPCBehaviour>().IsStunned = true;
+                    npc.GetComponent<NPCBehaviour>().IsPanicking = true;
+
+                } else if (Vector3.Distance(transform.position, npc.transform.position) <= panicRadius) {
+
+                    npc.GetComponent<NPCBehaviour>().IsPanicking = true;
+                }
             }
         }
     }

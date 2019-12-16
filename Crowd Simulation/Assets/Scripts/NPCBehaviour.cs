@@ -5,6 +5,9 @@ using LibGameAI.DecisionTrees;
 
 public class NPCBehaviour : MonoBehaviour
 {
+    // The Exit's location
+    [SerializeField] private Transform exit;
+
     // Arrays with the location of all areas of interest
     [SerializeField] private TablesManager[] eatingAreas;
     [SerializeField] private Transform[] restingAreas;
@@ -51,6 +54,12 @@ public class NPCBehaviour : MonoBehaviour
     // The table chosen by the agent when he goes to eat
     private Table chosenTable;
 
+    // Property to set this agent as panicking
+    public bool IsPanicking { get; set; }
+
+    // Property to set this agent as stunned
+    public bool IsStunned { get; set; }
+
     // Reference to our Nav Mesh Agent
     private NavMeshAgent agent;
 
@@ -75,11 +84,29 @@ public class NPCBehaviour : MonoBehaviour
     // Action node in case the agent is not excited
     private IDecisionTreeNode agentNotExcited;
 
+    // Decision node if the agent is panicking
+    private IDecisionTreeNode isAgentPanicking;
+
+    // Action node in case the agent is not panicking
+    private IDecisionTreeNode agentIsPanicking;
+
+    // Decision node if the agent is stunned
+    private IDecisionTreeNode isAgentStunned;
+
+    // Action node in case the agent is not stunned
+    private IDecisionTreeNode agentIsStunned;
+
     /// <summary>
     /// Awake is called when the script is loaded
     /// </summary>
-    private void Awake()
-    {
+    private void Awake() {
+
+        // Create a new action node for the agent stun behaviour
+        agentIsStunned = new ActionNode(Stun);
+
+        // Create a new action node for the agent panicking behaviour
+        agentIsPanicking = new ActionNode(RunToExit);
+
         // Create a new action node for the agent eating behaviour
         agentIsHungry = new ActionNode(AgentGoEat);
 
@@ -97,6 +124,11 @@ public class NPCBehaviour : MonoBehaviour
 
         // Create a new decision node to know if the agent is hungry
         isAgentHungry = new DecisionNode(IsAgentHungry, agentIsHungry, isAgentTired);
+
+        // Create a new decision node to know if the agent is panicking
+        isAgentPanicking = new DecisionNode(IsAgentPanicking, agentIsPanicking, isAgentHungry);
+
+        isAgentStunned = new DecisionNode(IsAgentStunned, agentIsStunned, isAgentPanicking);
     }
 
     /// <summary>
@@ -139,12 +171,12 @@ public class NPCBehaviour : MonoBehaviour
     }
 
     /// <summary>
-    /// Update is called once per frame
+    /// Frame-rate independent message for physics calculations
     /// </summary>
     void FixedUpdate()
     {
         // Call the root node of the decision tree
-        (isAgentHungry.MakeDecision() as ActionNode).Execute();
+        (isAgentStunned.MakeDecision() as ActionNode).Execute();
 
         // Update the level of excitement the agent has
         UpdateExcitementLevel();
@@ -156,6 +188,39 @@ public class NPCBehaviour : MonoBehaviour
         // If the agent is not eating we update the fullness level
         if (!isEating)
             UpdateFullness();
+    }
+
+    /// <summary>
+    /// Checks if an agent is currently stunned
+    /// </summary>
+    /// <returns>True if the agent is stunned, false otherwise</returns>
+    private bool IsAgentStunned() => IsStunned;
+
+    /// <summary>
+    /// Makes the agent become stunned
+    /// </summary>
+    private void Stun() {
+
+        // Reduce his speed by half
+        agent.speed = speed / 2.0f;
+    }
+
+    /// <summary>
+    /// Checks if the agent is currently panicking
+    /// </summary>
+    /// <returns>True if the agent is panicking, false otherwise</returns>
+    private bool IsAgentPanicking() => IsPanicking;
+
+    /// <summary>
+    /// Makes the agent run towards an exit
+    /// </summary>
+    private void RunToExit() {
+
+        // Set the exit as the agent's destination
+        agent.SetDestination(exit.position);
+
+        // Double his speed
+        agent.speed = speed * 2.0f;
     }
 
     /// <summary>
