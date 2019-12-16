@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ExplosionManager : MonoBehaviour {
 
@@ -28,8 +29,15 @@ public class ExplosionManager : MonoBehaviour {
     // The parent of the explosions spawners
     [SerializeField] private Transform spawnsParent;
 
+    [Header("UI Elements")]
+    // The Text element which will contain the total kill count
+    [SerializeField] private Text count;
+
     // The spawns for all explosions
     private List<Transform> explosionSpawns;
+
+    // The amount of kills so far
+    private int killCount;
 
     /// <summary>
     /// Awake is called before the game starts
@@ -92,9 +100,21 @@ public class ExplosionManager : MonoBehaviour {
             Quaternion.identity).GetComponent<ExplosionBehaviour>();
 
         // Pass variables from this script towards the last explosion
-        eb.AssignVariables(explosionSpeed, fireSpeed, killRadius, stunRadius, panicRadius, maxRadius);
+        eb.AssignVariables(explosionSpeed, fireSpeed, killRadius, stunRadius, panicRadius, maxRadius, this);
 
         // Activate the explosion
         eb.Explode();
+    }
+
+    /// <summary>
+    /// Updates the Kill Count and its UI display
+    /// </summary>
+    public void UpdateKillCount() {
+
+        // Increments the Kill Count by 1
+        killCount++;
+
+        // Updates the display
+        count.text = killCount.ToString();
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.AI;
 using UnityEngine;
 
 public class ExplosionBehaviour : MonoBehaviour {
@@ -21,6 +20,9 @@ public class ExplosionBehaviour : MonoBehaviour {
     // The current explosion radius
     private float currentRadius;
 
+    // The script that spawned this explosion
+    private ExplosionManager explosionManager;
+
     /// <summary>
     /// Awake is called before the game starts
     /// </summary>
@@ -30,6 +32,8 @@ public class ExplosionBehaviour : MonoBehaviour {
         transform.position = new Vector3(transform.position.x,
                                          transform.localScale.y, 
                                          transform.position.z);
+
+        transform.GetChild(0).GetComponent<CapsuleCollider>().radius = panicRadius;
     }
 
     /// <summary>
@@ -50,7 +54,8 @@ public class ExplosionBehaviour : MonoBehaviour {
     /// <param name="stunRadius">The radius to stun NPCs</param>
     /// <param name="panicRadius">The radius for the NPCs to panic</param>
     public void AssignVariables(float explosionSpeed, float fireSpeed, 
-        float killRadius, float stunRadius, float panicRadius, float maxRadius) {
+        float killRadius, float stunRadius, float panicRadius, float maxRadius,
+        ExplosionManager explosionManager) {
 
         this.explosionSpeed = explosionSpeed;
         this.fireSpeed = fireSpeed;
@@ -58,6 +63,8 @@ public class ExplosionBehaviour : MonoBehaviour {
         this.stunRadius = stunRadius;
         this.panicRadius = panicRadius;
         this.maxRadius = maxRadius;
+
+        this.explosionManager = explosionManager;
     }
 
     /// <summary>
@@ -98,7 +105,7 @@ public class ExplosionBehaviour : MonoBehaviour {
     }
 
     /// <summary>
-    /// Creates an explosion at the center of the Instantiated Explosion
+    /// Creates an OverlapSphere at the center of the Instantiated Explosion
     /// </summary>
     public void Explode() {
 
@@ -111,34 +118,48 @@ public class ExplosionBehaviour : MonoBehaviour {
             // ...finds the ones with the 'NPC' tag...
             if (npc.CompareTag("NPC")) {
 
+                // ...if the distance is smaller than the kill radius on the moment of the explosion...
                 if (Vector3.Distance(transform.position, npc.transform.position) <= killRadius) {
 
+                    // ...'kill' the npc...
                     npc.GetComponent<NPCBehaviour>().IsDead = true;
 
-                    //// ...disables Behaviours and AI based movement...
-                    //npc.GetComponent<NPCBehaviour>().enabled = false;
-                    //npc.GetComponent<NavMeshAgent>().enabled = false;
+                    // ...and update the UI display
+                    explosionManager.UpdateKillCount();
 
-                    //// ...fetches the colliders' Rigidbody...
-                    //Rigidbody otherRb = npc.GetComponent<Rigidbody>();
-
-                    //// ...changes rigidbody settings so that Physics can work on them...
-                    //otherRb.isKinematic = false;
-                    //otherRb.useGravity = true;
-
-                    //// ...and adds an explosion force based on the center of the explosion
-                    //otherRb.AddExplosionForce(100000, transform.position, killRadius, 50000);
-
+                // ...if the distance is smaller than the stun radius on the moment of the explosion...
                 } else if (Vector3.Distance(transform.position, npc.transform.position) <= stunRadius) {
 
+                    // ...set the npc as Stunned
                     npc.GetComponent<NPCBehaviour>().IsStunned = true;
+
+                    // ...and also as Panicking (although he won't be able to run)
                     npc.GetComponent<NPCBehaviour>().IsPanicking = true;
 
+                // ...if the distance is smaller than the panic radius on the moment of the explosion...
                 } else if (Vector3.Distance(transform.position, npc.transform.position) <= panicRadius) {
 
+                    // ...set the npc as Panicking (will be able to run)
                     npc.GetComponent<NPCBehaviour>().IsPanicking = true;
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Gets called when the Collider 'other' enters the trigger
+    /// </summary>
+    /// <param name="other">The Collider we hit</param>
+    private void OnTriggerEnter(Collider other) {
+
+        // If the 'other' Collider has an 'NPC' tag...
+        if (other.CompareTag("NPC")) {
+
+            // 'kill' the npc
+            other.GetComponent<NPCBehaviour>().IsDead = true;
+
+            // ...and update the UI display
+            explosionManager.UpdateKillCount();
         }
     }
 }
