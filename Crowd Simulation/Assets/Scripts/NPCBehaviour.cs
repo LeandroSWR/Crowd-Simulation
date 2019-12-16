@@ -60,6 +60,9 @@ public class NPCBehaviour : MonoBehaviour
     // Property to set this agent as stunned
     public bool IsStunned { get; set; }
 
+    // Property to pronounce this agent as dead
+    public bool IsDead { get; set; }
+
     // The timer for the Stun
     private float stunTime = 1.5f;
 
@@ -98,10 +101,19 @@ public class NPCBehaviour : MonoBehaviour
     // Action node in case the agent is not stunned
     private IDecisionTreeNode agentIsStunned;
 
+    // Decision node if the agent is dead
+    private IDecisionTreeNode isAgentDead;
+
+    // Action node in case the agent is not stunned
+    private IDecisionTreeNode agentIsDead;
+
     /// <summary>
     /// Awake is called when the script is loaded
     /// </summary>
     private void Awake() {
+
+        // Create a new action node for the agent death behaviour
+        agentIsDead = new ActionNode(Die);
 
         // Create a new action node for the agent stun behaviour
         agentIsStunned = new ActionNode(Stun);
@@ -130,7 +142,11 @@ public class NPCBehaviour : MonoBehaviour
         // Create a new decision node to know if the agent is panicking
         isAgentPanicking = new DecisionNode(IsAgentPanicking, agentIsPanicking, isAgentHungry);
 
+        // Create a new decision node to know if the agent is stunned
         isAgentStunned = new DecisionNode(IsAgentStunned, agentIsStunned, isAgentPanicking);
+
+        // Create a new decision node to know if the agent is dead
+        isAgentDead = new DecisionNode(IsAgentDead, agentIsDead, isAgentStunned);
     }
 
     /// <summary>
@@ -155,6 +171,9 @@ public class NPCBehaviour : MonoBehaviour
 
         // Initialize the `HasReachedStage` as false
         HasReachedStage = false;
+
+        // Set the agent as not dead, in case it had already died
+        IsDead = false;
 
         // Define the initial values for the excitement level
         excitementLevel = 0f;
@@ -181,7 +200,7 @@ public class NPCBehaviour : MonoBehaviour
     void FixedUpdate()
     {
         // Call the root node of the decision tree
-        (isAgentStunned.MakeDecision() as ActionNode).Execute();
+        (isAgentDead.MakeDecision() as ActionNode).Execute();
 
         // Update the level of excitement the agent has
         UpdateExcitementLevel();
@@ -193,6 +212,21 @@ public class NPCBehaviour : MonoBehaviour
         // If the agent is not eating we update the fullness level
         if (!isEating)
             UpdateFullness();
+    }
+
+    /// <summary>
+    /// Checks if an agent is currently dead
+    /// </summary>
+    /// <returns>True if the agent is dead, false otherwise</returns>
+    private bool IsAgentDead() => IsDead;
+
+    /// <summary>
+    /// 'Kills' this agent
+    /// </summary>
+    private void Die() {
+
+        // Disables the agent's GameObject
+        gameObject.SetActive(false);
     }
 
     /// <summary>
@@ -216,7 +250,11 @@ public class NPCBehaviour : MonoBehaviour
 
             // Reduce his speed by half
             agent.speed = speed / 2.0f;
+
+            // Reset stun time
             stunTime = 1.5f;
+
+            // The agent stops being stunned
             IsStunned = false;
         }
     }
@@ -235,8 +273,8 @@ public class NPCBehaviour : MonoBehaviour
         // Set the exit as the agent's destination
         agent.SetDestination(exit.position);
 
-        // Double his speed
-        agent.speed = speed * 2.0f;
+        // Double his speed only if he wasn't stunned
+        if (agent.speed == speed) agent.speed = speed * 2.0f;
     }
 
     /// <summary>

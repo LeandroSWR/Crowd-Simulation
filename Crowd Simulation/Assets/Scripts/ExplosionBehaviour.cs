@@ -113,19 +113,21 @@ public class ExplosionBehaviour : MonoBehaviour {
 
                 if (Vector3.Distance(transform.position, npc.transform.position) <= killRadius) {
 
-                    // ...disables Behaviours and AI based movement...
-                    npc.GetComponent<NPCBehaviour>().enabled = false;
-                    npc.GetComponent<NavMeshAgent>().enabled = false;
+                    npc.GetComponent<NPCBehaviour>().IsDead = true;
 
-                    // ...fetches the colliders' Rigidbody...
-                    Rigidbody otherRb = npc.GetComponent<Rigidbody>();
+                    //// ...disables Behaviours and AI based movement...
+                    //npc.GetComponent<NPCBehaviour>().enabled = false;
+                    //npc.GetComponent<NavMeshAgent>().enabled = false;
 
-                    // ...changes rigidbody settings so that Physics can work on them...
-                    otherRb.isKinematic = false;
-                    otherRb.useGravity = true;
+                    //// ...fetches the colliders' Rigidbody...
+                    //Rigidbody otherRb = npc.GetComponent<Rigidbody>();
 
-                    // ...and adds an explosion force based on the center of the explosion
-                    otherRb.AddExplosionForce(100000, transform.position, killRadius, 50000);
+                    //// ...changes rigidbody settings so that Physics can work on them...
+                    //otherRb.isKinematic = false;
+                    //otherRb.useGravity = true;
+
+                    //// ...and adds an explosion force based on the center of the explosion
+                    //otherRb.AddExplosionForce(100000, transform.position, killRadius, 50000);
 
                 } else if (Vector3.Distance(transform.position, npc.transform.position) <= stunRadius) {
 
