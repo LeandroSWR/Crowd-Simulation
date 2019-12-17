@@ -66,6 +66,9 @@ public class NPCBehaviour : MonoBehaviour {
     // Property to pronounce this agent as dead
     public bool IsDead { get; set; }
 
+    // Bool to verify if the agent is despawning
+    private bool isDespawning;
+
     // The timer for the Stun
     private float stunTime;
     public float StunTime { set => stunTime = value; }
@@ -242,8 +245,12 @@ public class NPCBehaviour : MonoBehaviour {
         myRigidbody.isKinematic = false;
         myRigidbody.useGravity = true;
 
-        // Disable this script
-        enabled = false;
+        // If the agent isn't despawning...
+        if (!isDespawning) {
+
+            // ...Start despawning
+            StartCoroutine(Despawn());
+        }
     }
 
     /// <summary>
@@ -614,6 +621,21 @@ public class NPCBehaviour : MonoBehaviour {
             // The agent has reached the stage
             HasReachedStage = true;
         }
+    }
+
+    /// <summary>
+    /// Disable the current agent
+    /// </summary>
+    /// <returns>Waits for some seconds</returns>
+    private IEnumerator Despawn() {
+
+        if (isDespawning) yield break;
+
+        isDespawning = true;
+
+        yield return new WaitForSeconds(2);
+
+        gameObject.SetActive(false);
     }
 
     /// <summary>
