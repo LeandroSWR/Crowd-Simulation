@@ -270,6 +270,10 @@ public class NPCBehaviour : MonoBehaviour
     /// Makes the agent run towards an exit
     /// </summary>
     private void RunToExit() {
+        
+        // Prevent the agent from getting stuck
+        // (e.g. if he was waiting for a table)
+        agent.isStopped = false;
 
         // Set the exit as the agent's destination
         agent.SetDestination(exit.position);
@@ -315,6 +319,9 @@ public class NPCBehaviour : MonoBehaviour
             // If the choosen table had no seats available
             if (chosenTable.AvailableSeats.Count == 0)
             {
+                // If there is no table available continue walking to the stage
+                AgentChangeStage();
+
                 // Return to choose another table
                 return;
             }
