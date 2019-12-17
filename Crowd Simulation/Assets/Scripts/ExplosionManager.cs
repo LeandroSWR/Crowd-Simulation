@@ -83,27 +83,34 @@ public class ExplosionManager : MonoBehaviour {
     /// </summary>
     private void CheckInput() {
 
-        // Detect the wanted button press
-        if (Input.GetKeyDown(explosionKey)) {
+        // Detect Mouse 0 Click
+        if (Input.GetMouseButtonDown(0)) {
 
-            // Select a random NPC to Instantiate an explosion
-            SelectExplosionLocation();
+            // Cast a ray from the mouse position on the screen onto the world
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+            // Create a Raycast hit to hold all hit information
+            RaycastHit hit;
+
+            // Check if the Raycast hit something
+            if (Physics.Raycast(ray, out hit)) {
+
+                // Place an explosion on the hit point
+                SelectExplosionLocation(hit.point);
+            }
         }
     }
 
     /// <summary>
     /// Selects which NPC will explode
     /// </summary>
-    private void SelectExplosionLocation() {
-
-        // Get a random index based on the number of NPCs
-        int npcIndex = Random.Range(0, explosionSpawns.Count);
+    private void SelectExplosionLocation(Vector3 explosionPos) {
 
         // Get the 'ExplosionBehaviour' script attached to the newly Instantiated explosion GameObject
         ExplosionBehaviour eb = 
             Instantiate(explosionPrefab,
-            spawnsParent.GetChild(npcIndex).position,
-            Quaternion.identity).GetComponent<ExplosionBehaviour>();
+                explosionPos,
+                Quaternion.identity).GetComponent<ExplosionBehaviour>();
 
         // Pass variables from this script towards the last explosion
         eb.AssignVariables(explosionSpeed, fireSpeed, killRadius, stunRadius, panicRadius, this);
