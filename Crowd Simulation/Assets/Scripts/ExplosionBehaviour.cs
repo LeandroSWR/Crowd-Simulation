@@ -14,6 +14,7 @@ public class ExplosionBehaviour : MonoBehaviour {
     private float killRadius;  // The radius at which NPC's get killed
     private float stunRadius;  // The radius at which NPC's get stunned
     private float panicRadius; // The radius at which NPC's start panicking
+    private float maxRadius;   // The radius at which the fire stops
 
     // The scale to be applied
     private Vector3 desiredScale;
@@ -52,8 +53,10 @@ public class ExplosionBehaviour : MonoBehaviour {
     /// <param name="killRadius">The radius to kill NPCs</param>
     /// <param name="stunRadius">The radius to stun NPCs</param>
     /// <param name="panicRadius">The radius for the NPCs to panic</param>
+    /// <param name="maxRadius">The radius for the fire to stop</param>
+    /// <param name="explosionManager">The explosion manager reference</param>
     public void AssignVariables(float explosionSpeed, float fireSpeed, 
-        float killRadius, float stunRadius, float panicRadius,
+        float killRadius, float stunRadius, float panicRadius, float maxRadius,
         ExplosionManager explosionManager) {
 
         this.explosionSpeed = explosionSpeed;
@@ -61,6 +64,7 @@ public class ExplosionBehaviour : MonoBehaviour {
         this.killRadius = killRadius;
         this.stunRadius = stunRadius;
         this.panicRadius = panicRadius;
+        this.maxRadius = maxRadius;
 
         this.explosionManager = explosionManager;
     }
@@ -81,11 +85,17 @@ public class ExplosionBehaviour : MonoBehaviour {
             // ...Increase the radius with the appropriate speed
             desiredScale += Vector3.one * (Time.deltaTime * explosionSpeed);
 
-        // If the current radius is bigger or equals the radius to kill NPCs...
-        } else {
+        // If the current radius is smaller than the max radius...
+        } else if (currentRadius < maxRadius) {
 
             // ...Increase the radius with a faster speed
             desiredScale += Vector3.one * (Time.deltaTime * fireSpeed);
+
+        // If the current radius is bigger than tha max radius...
+        } else {
+
+            // ...Destroy itself
+            Destroy(gameObject);
         }
 
         // Apply the correct scale on the 'y' axis (by resetting it)
@@ -101,7 +111,7 @@ public class ExplosionBehaviour : MonoBehaviour {
     public void Explode() {
 
         // Gets all colliders around this GameObject (with a big enough radius)
-        Collider[] npcs = Physics.OverlapSphere(transform.position, 500);
+        Collider[] npcs = Physics.OverlapSphere(transform.position, maxRadius);
 
         // Iterates through all Colliders found...
         foreach(Collider c in npcs) {
@@ -236,18 +246,24 @@ public class ExplosionBehaviour : MonoBehaviour {
             transform.position, killRadius, verticalForce, ForceMode.Acceleration);
     }
 
+    /// <summary>
+    /// Lets us see the radiuses with the Scene Camera on the Editor
+    /// </summary>
     private void OnDrawGizmos() {
 
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, panicRadius);
-
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, stunRadius);
+        Gizmos.color = Color.white;
+        Gizmos.DrawWireSphere(transform.position, currentRadius);
 
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(transform.position, killRadius);
 
-        Gizmos.color = Color.white;
-        Gizmos.DrawWireSphere(transform.position, currentRadius);
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, stunRadius);
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, panicRadius);
+
+        Gizmos.color = Color.black;
+        Gizmos.DrawWireSphere(transform.position, maxRadius);
     }
 }
