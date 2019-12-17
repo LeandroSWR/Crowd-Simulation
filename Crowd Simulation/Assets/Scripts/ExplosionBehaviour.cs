@@ -121,6 +121,7 @@ public class ExplosionBehaviour : MonoBehaviour {
                     // ...and update the UI display...
                     explosionManager.UpdateKillCount();
 
+                    // ...and add a big force to it
                     StartCoroutine(NPCAddForce(npc, 500, 100));
 
                     // ...if the distance is smaller than the stun radius on the moment of the explosion...
@@ -167,8 +168,11 @@ public class ExplosionBehaviour : MonoBehaviour {
                     // ...'kill' the NPC...
                     npc.IsDead = true;
 
-                    // ...and update the UI display
+                    // ...update the UI display...
                     explosionManager.UpdateKillCount();
+
+                    // ...and add a small force to it
+                    StartCoroutine(NPCAddForce(npc, -100, 0));
                 }
 
                 // If the distance between the Explosion and the NPC is bigger
@@ -195,7 +199,8 @@ public class ExplosionBehaviour : MonoBehaviour {
 
             // If the distance between the Explosion and the NPC is smaller (or equal)
             // than that of the current explosion radius...
-            if (Vector3.Distance(transform.position, npc.transform.position) <= currentRadius) {
+            if (Vector3.Distance(transform.position, npc.transform.position) <= 
+                currentRadius) {
 
                 // Verify if the NPC is already dead
                 if (!npc.IsDead) {
@@ -203,10 +208,11 @@ public class ExplosionBehaviour : MonoBehaviour {
                     // ...'kill' the NPC...
                     npc.IsDead = true;
 
-                    // ...and update the UI display
+                    // ...update the UI display...
                     explosionManager.UpdateKillCount();
 
-                    StartCoroutine(NPCAddForce(npc, 500, 0));
+                    // ...and add a small force to it
+                    StartCoroutine(NPCAddForce(npc, -100, 0));
                 }
             }
         }
@@ -219,13 +225,15 @@ public class ExplosionBehaviour : MonoBehaviour {
     /// <param name="explosionForce">The explosion force</param>
     /// <param name="verticalForce">The vertical explosion force</param>
     /// <returns>Skips 1 frame</returns>
-    private IEnumerator NPCAddForce(NPCBehaviour npc, float explosionForce, float verticalForce) {
+    private IEnumerator NPCAddForce(NPCBehaviour npc, 
+        float explosionForce, float verticalForce) {
 
         // Waits for the next frame
         yield return 0;
 
         // Adds an explosion force based on the center of the explosion
-        npc.GetComponent<Rigidbody>().AddExplosionForce(explosionForce, transform.position, killRadius, verticalForce, ForceMode.Acceleration);
+        npc.GetComponent<Rigidbody>().AddExplosionForce(explosionForce, 
+            transform.position, killRadius, verticalForce, ForceMode.Acceleration);
     }
 
     private void OnDrawGizmos() {

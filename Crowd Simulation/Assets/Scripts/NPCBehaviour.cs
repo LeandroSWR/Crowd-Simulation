@@ -74,7 +74,7 @@ public class NPCBehaviour : MonoBehaviour
     private NavMeshAgent agent;
 
     // Reference to our Rigidbody
-    private Rigidbody rigidbody;
+    private Rigidbody myRigidbody;
 
     // Action and Decision Nodes \\
 
@@ -165,7 +165,7 @@ public class NPCBehaviour : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
 
         // Fetch our Rigidbody component component
-        rigidbody = GetComponent<Rigidbody>();
+        myRigidbody = GetComponent<Rigidbody>();
 
         // Assign this speed as the agent's speed
         agent.speed = speed;
@@ -232,11 +232,18 @@ public class NPCBehaviour : MonoBehaviour
     /// </summary>
     private void Die() {
 
-        GetComponent<NPCBehaviour>().enabled = false;
-        GetComponent<NavMeshAgent>().enabled = false;
+        // Disable the main npc Collider
+        gameObject.GetComponent<Collider>().enabled = false;
 
-        rigidbody.isKinematic = false;
-        rigidbody.useGravity = true;
+        // Disable the NavmeshAgent
+        agent.enabled = false;
+
+        // Make our rigidbody get affected by Physics
+        myRigidbody.isKinematic = false;
+        myRigidbody.useGravity = true;
+
+        // Disable this script
+        enabled = false;
     }
 
     /// <summary>
