@@ -3,6 +3,9 @@ using UnityEngine.AI;
 using System.Collections;
 using LibGameAI.DecisionTrees;
 
+/// <summary>
+/// Class responsible for all NPC behaviours
+/// </summary>
 public class NPCBehaviour : MonoBehaviour
 {
     // The Exit's location
@@ -579,6 +582,12 @@ public class NPCBehaviour : MonoBehaviour
 
             // Set the other NPC as panicking aswell
             other.GetComponent<NPCBehaviour>().IsPanicking = true;
+
+        // If the Collider the agent hit is an Exit
+        } else if (other.CompareTag("Exit")) {
+
+            // Disable the agent
+            gameObject.SetActive(false);
         }
     }
 
