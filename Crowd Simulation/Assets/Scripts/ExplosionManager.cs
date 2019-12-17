@@ -21,6 +21,11 @@ public class ExplosionManager : MonoBehaviour {
     [SerializeField] private float panicRadius; // The radius at which NPC's start panicking
     [SerializeField] private float maxRadius;   // The radius at which the Explosions stop
 
+    [Header("Timer")]
+    // The Stun time to be applied if necessary
+    [SerializeField] private float stunTime;
+    public float StunTime { get => stunTime; }
+
     [Header("Explosion Prefab")]
     // The explosion's prefab object
     [SerializeField] private Transform explosionPrefab;

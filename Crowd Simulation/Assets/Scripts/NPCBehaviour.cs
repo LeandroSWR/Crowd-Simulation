@@ -64,7 +64,8 @@ public class NPCBehaviour : MonoBehaviour
     public bool IsDead { get; set; }
 
     // The timer for the Stun
-    private float stunTime = 1.5f;
+    private float stunTime;
+    public float StunTime { set => stunTime = value; }
 
     // Reference to our Nav Mesh Agent
     private NavMeshAgent agent;
@@ -557,6 +558,20 @@ public class NPCBehaviour : MonoBehaviour
                     StartCoroutine(StopPushing());
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Gets called when the Collider 'other' enters the trigger
+    /// </summary>
+    /// <param name="other">The Collider we hit</param>
+    private void OnTriggerEnter(Collider other) {
+        
+        // If the Collider the agent hit is another NPC and this agent is panicking
+        if (other.CompareTag("NPC") && IsPanicking) {
+
+            // Set the other NPC as panicking aswell
+            other.GetComponent<NPCBehaviour>().IsPanicking = true;
         }
     }
 

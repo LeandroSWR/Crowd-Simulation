@@ -32,8 +32,6 @@ public class ExplosionBehaviour : MonoBehaviour {
         transform.position = new Vector3(transform.position.x,
                                          transform.localScale.y, 
                                          transform.position.z);
-
-        transform.GetChild(0).GetComponent<CapsuleCollider>().radius = panicRadius;
     }
 
     /// <summary>
@@ -113,16 +111,19 @@ public class ExplosionBehaviour : MonoBehaviour {
         Collider[] npcs = Physics.OverlapSphere(transform.position, maxRadius);
 
         // Iterates through all Colliders found...
-        foreach(Collider npc in npcs) {
+        foreach(Collider c in npcs) {
 
             // ...finds the ones with the 'NPC' tag...
-            if (npc.CompareTag("NPC")) {
+            if (c.CompareTag("NPC")) {
+
+                // ...fetch its NPC Behaviour script...
+                NPCBehaviour npc = c.GetComponent<NPCBehaviour>();
 
                 // ...if the distance is smaller than the kill radius on the moment of the explosion...
-                if (Vector3.Distance(transform.position, npc.transform.position) <= killRadius) {
+                if (Vector3.Distance(transform.position, c.transform.position) <= killRadius) {
 
                     // ...'kill' the npc...
-                    npc.GetComponent<NPCBehaviour>().IsDead = true;
+                    npc.IsDead = true;
 
                     // ...and update the UI display
                     explosionManager.UpdateKillCount();
@@ -130,17 +131,20 @@ public class ExplosionBehaviour : MonoBehaviour {
                 // ...if the distance is smaller than the stun radius on the moment of the explosion...
                 } else if (Vector3.Distance(transform.position, npc.transform.position) <= stunRadius) {
 
-                    // ...set the npc as Stunned
-                    npc.GetComponent<NPCBehaviour>().IsStunned = true;
+                    // ...set its stun time...
+                    npc.StunTime = explosionManager.StunTime;
+
+                    // ...set the npc as Stunned...
+                    npc.IsStunned = true;
 
                     // ...and also as Panicking (although he won't be able to run)
-                    npc.GetComponent<NPCBehaviour>().IsPanicking = true;
+                    npc.IsPanicking = true;
 
                 // ...if the distance is smaller than the panic radius on the moment of the explosion...
                 } else if (Vector3.Distance(transform.position, npc.transform.position) <= panicRadius) {
 
                     // ...set the npc as Panicking (will be able to run)
-                    npc.GetComponent<NPCBehaviour>().IsPanicking = true;
+                    npc.IsPanicking = true;
                 }
             }
         }
@@ -155,11 +159,55 @@ public class ExplosionBehaviour : MonoBehaviour {
         // If the 'other' Collider has an 'NPC' tag...
         if (other.CompareTag("NPC")) {
 
-            // 'kill' the npc
-            other.GetComponent<NPCBehaviour>().IsDead = true;
+            // ...fetch its NPC Behaviour script...
+            NPCBehaviour npc = other.GetComponent<NPCBehaviour>();
 
-            // ...and update the UI display
-            explosionManager.UpdateKillCount();
+            // If the distance between the Explosion and the NPC is smaller (or equal)
+            // that that of the current explosion radius...
+            if (Vector3.Distance(transform.position, npc.transform.position) <= panicRadius) {
+
+                // Verify if the NPC is already dead
+                if (!npc.IsDead) {
+
+                    // ...'kill' the NPC...
+                    npc.IsDead = true;
+
+                    // ...and update the UI display
+                    explosionManager.UpdateKillCount();
+                }
+
+            // If the distance between the Explosion and the NPC is bigger
+            // than that of the current explosion radius...
+            } else {
+
+                // ...set its stun time as 0 (so it starts running immediatelly 
+                // but with half its original speed)...
+                npc.StunTime = 0.0f;
+
+                // ...set the npc as Stunned...
+                npc.IsStunned = true;
+
+                // ...and also as Panicking
+                npc.IsPanicking = true;
+            }
         }
     }
+
+    //private void OnDrawGizmos() {
+
+    //    Gizmos.color = Color.red;
+    //    Gizmos.DrawWireSphere(transform.position, panicRadius);
+
+    //    Gizmos.color = Color.yellow;
+    //    Gizmos.DrawWireSphere(transform.position, stunRadius);
+
+    //    Gizmos.color = Color.green;
+    //    Gizmos.DrawWireSphere(transform.position, killRadius);
+
+    //    Gizmos.color = Color.black;
+    //    Gizmos.DrawWireSphere(transform.position, maxRadius);
+
+    //    Gizmos.color = Color.white;
+    //    Gizmos.DrawWireSphere(transform.position, currentRadius);
+    //}
 }
