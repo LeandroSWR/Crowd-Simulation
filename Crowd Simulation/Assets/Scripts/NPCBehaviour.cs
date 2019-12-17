@@ -233,7 +233,7 @@ public class NPCBehaviour : MonoBehaviour {
     private void Die() {
 
         // Disable the main npc Collider
-        gameObject.GetComponent<Collider>().enabled = false;
+        //gameObject.GetComponent<Collider>().enabled = false;
 
         // Disable the NavmeshAgent
         agent.enabled = false;
@@ -474,6 +474,7 @@ public class NPCBehaviour : MonoBehaviour {
     /// Makes the agent go to another stage
     /// </summary>
     private void AgentChangeStage() {
+
         // Get a new random float between 1 and 100
         float stageSelect = Random.Range(1, 100);
 
@@ -595,18 +596,6 @@ public class NPCBehaviour : MonoBehaviour {
 
             // Disable the agent
             gameObject.SetActive(false);
-
-        } else if (other.CompareTag("Fire")) {
-
-
-        }
-    }
-
-    private void OnTriggerStay(Collider other) {
-        
-        if (other.CompareTag("Fire")) {
-
-
         }
     }
 
