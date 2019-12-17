@@ -1,7 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
+/// <summary>
+/// Class that gets all tables present on the Scene
+/// </summary>
 public class TablesManager : MonoBehaviour
 {
     // Array of all existing tables in this resting area

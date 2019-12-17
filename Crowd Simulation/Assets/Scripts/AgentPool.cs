@@ -1,8 +1,11 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// Class that saves all agents in this GameObject
+/// </summary>
 public class AgentPool : MonoBehaviour
 {
-    // Array with 500 agents
+    // Array with all agents
     public Transform[] Agents { get; private set; }
 
     /// <summary>

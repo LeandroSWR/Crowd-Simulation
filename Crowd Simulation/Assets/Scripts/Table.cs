@@ -1,7 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Class that gets all seats on a table
+/// </summary>
 public class Table : MonoBehaviour
 {
     // Array with all the table seats
