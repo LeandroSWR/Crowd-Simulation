@@ -595,6 +595,18 @@ public class NPCBehaviour : MonoBehaviour {
 
             // Disable the agent
             gameObject.SetActive(false);
+
+        } else if (other.CompareTag("Fire")) {
+
+
+        }
+    }
+
+    private void OnTriggerStay(Collider other) {
+        
+        if (other.CompareTag("Fire")) {
+
+
         }
     }
 
