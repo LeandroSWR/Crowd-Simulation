@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// Class that spawns NPCs
@@ -9,13 +10,14 @@ public class SpawnController : MonoBehaviour {
     // Pool of agents
     [SerializeField] private AgentPool pool;
 
-    // How many agents we want to spawn
-    [Range(100, 500)]
-    [SerializeField]
-    private float nAgentsToSpawn;
+    // Slider that controls the amount of agents
+    [SerializeField] private Slider agentsSlider;
 
     // How long to wait between each spawn
     [SerializeField] private float spawnDelay;
+
+    // How many agents we want to spawn
+    private int nAgentsToSpawn;
 
     // Array with all possible spawn points
     private Transform[] spawnPoints;
@@ -26,6 +28,8 @@ public class SpawnController : MonoBehaviour {
     // Start is called before the first frame update
     void Start() {
 
+        GetAgentCount();
+
         // Set the spawn delay to be 0.5 seconds;
         waitDelay = new WaitForSeconds(spawnDelay);
 
@@ -33,6 +37,14 @@ public class SpawnController : MonoBehaviour {
         spawnPoints = GetComponentsInChildren<Transform>();
 
         StartCoroutine(SpawnAgents());
+    }
+
+    /// <summary>
+    /// Gets the agent count from the slider
+    /// </summary>
+    private void GetAgentCount() {
+
+        nAgentsToSpawn = (int)agentsSlider.value;
     }
 
     /// <summary>

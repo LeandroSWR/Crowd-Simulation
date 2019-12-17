@@ -16,6 +16,12 @@ public class UIManager : MonoBehaviour {
     // The time scale text present on the UI
     [SerializeField] private Text timeScaleText;
 
+    // The slider which controls the amount of agents to spawn
+    [SerializeField] private Slider spawnSlider;
+
+    // The text that gets updated with the slider's value
+    [SerializeField] private Text sliderText;
+
     /// <summary>
     /// Awake is called before the game starts
     /// </summary>
@@ -50,8 +56,14 @@ public class UIManager : MonoBehaviour {
             }
         }
 
+        // Show the time scale on the button's text
         timeScaleText.text = $"{Time.timeScale}x";
     }
+
+    /// <summary>
+    /// Updates the slider's text
+    /// </summary>
+    public void UpdateSliderText() => sliderText.text = spawnSlider.value.ToString("0");
 
     /// <summary>
     /// Restarts the Simulation
