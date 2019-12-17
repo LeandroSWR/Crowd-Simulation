@@ -8,13 +8,11 @@ using LibGameAI.DecisionTrees;
 /// </summary>
 public class NPCBehaviour : MonoBehaviour {
 
-    // The Exit's location
-    [SerializeField] private Transform exit;
-
     // Arrays with the location of all areas of interest
     [SerializeField] private TablesManager[] eatingAreas;
     [SerializeField] private Transform[] restingAreas;
     [SerializeField] private Transform[] stages;
+    [SerializeField] private Transform[] exits;
 
     // How fast the agent moves
     [SerializeField] private float speed = 10f;
@@ -299,7 +297,7 @@ public class NPCBehaviour : MonoBehaviour {
         agent.isStopped = false;
 
         // Set the exit as the agent's destination
-        agent.SetDestination(exit.position);
+        agent.SetDestination(GetClosestExit().position);
 
         // Double his speed only if he wasn't stunned
         if (agent.speed == speed) agent.speed = speed * 2.0f;
@@ -629,13 +627,47 @@ public class NPCBehaviour : MonoBehaviour {
     /// <returns>Waits for some seconds</returns>
     private IEnumerator Despawn() {
 
+        // Verify if agent has started despawning
         if (isDespawning) yield break;
 
+        // Agent is now despawning
         isDespawning = true;
 
+        // Wait for 2 seconds
         yield return new WaitForSeconds(2);
 
+        // Disable the agent
         gameObject.SetActive(false);
+    }
+
+    /// <summary>
+    /// Chooses a random exit based based on the closest
+    /// </summary>
+    /// <returns>The closest exit</returns>
+    private Transform GetClosestExit() {
+
+        // Set a minimum distance the size of Infinity
+        float minDistance = Mathf.Infinity;
+
+        // Transform be returned later
+        Transform closestExit = null;
+
+        // Iterate through the exits array
+        foreach (Transform t in exits) {
+
+            // Verify if the distance to the current exit is the smallest
+            if (Vector3.Distance(transform.position, t.position) < minDistance) {
+
+                // Define the new minimum distance
+                minDistance = Vector3.Distance(transform.position, t.position);
+
+                // If so, set the new exit
+                closestExit = t;
+            }
+        }
+
+        // return the exit
+        return closestExit;
     }
 
     /// <summary>
