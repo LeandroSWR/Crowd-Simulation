@@ -6,8 +6,8 @@ using LibGameAI.DecisionTrees;
 /// <summary>
 /// Class responsible for all NPC behaviours
 /// </summary>
-public class NPCBehaviour : MonoBehaviour
-{
+public class NPCBehaviour : MonoBehaviour {
+
     // The Exit's location
     [SerializeField] private Transform exit;
 
@@ -18,7 +18,7 @@ public class NPCBehaviour : MonoBehaviour
 
     // How fast the agent moves
     [SerializeField] private float speed = 10f;
-    
+
     // Boredom behaviour variables
     private readonly float maximumExcitementLevel = 100f;   // How much excitement the agent can have
     private float excitementLevel;  // The current level of excitement
@@ -159,8 +159,8 @@ public class NPCBehaviour : MonoBehaviour
     /// <summary>
     /// Start is called before the first frame update
     /// </summary>
-    void Start()
-    {
+    void Start() {
+
         // Initialize `agent` by getting the NavMeshAgent component
         agent = GetComponent<NavMeshAgent>();
 
@@ -204,14 +204,14 @@ public class NPCBehaviour : MonoBehaviour
     /// <summary>
     /// Frame-rate independent message for physics calculations
     /// </summary>
-    void FixedUpdate()
-    {
+    void FixedUpdate() {
+
         // Call the root node of the decision tree
         (isAgentDead.MakeDecision() as ActionNode).Execute();
 
         // Update the level of excitement the agent has
         UpdateExcitementLevel();
-        
+
         // If the agent is not resting we update the stamina level
         if (!isResting)
             UpdateStaminaLevel();
@@ -286,7 +286,7 @@ public class NPCBehaviour : MonoBehaviour
     /// Makes the agent run towards an exit
     /// </summary>
     private void RunToExit() {
-        
+
         // Prevent the agent from getting stuck
         // (e.g. if he was waiting for a table)
         agent.isStopped = false;
@@ -308,33 +308,33 @@ public class NPCBehaviour : MonoBehaviour
     /// Makes the agent go eat till he's full again
     /// </summary>
     private void AgentGoEat() {
+
         // If the agent hasn't selected an eating area yet
-        if (currentEatingArea == null)
-        {
+        if (currentEatingArea == null) {
+
             // The agent is stoped while he chooses a table
             agent.isStopped = true;
 
             // Select a random eating area from the two available
-            TablesManager eatingArea = 
+            TablesManager eatingArea =
                 Random.Range(1f, 100f) > 50 ? eatingAreas[0] : eatingAreas[1];
 
             // Set the table to the first in the list
             chosenTable = eatingArea.Tables[0];
 
             // Logic to choose the table with less people on it
-            foreach (Table t in eatingArea.Tables)
-            {
+            foreach (Table t in eatingArea.Tables) {
+
                 // If the number of people sitting at the current table is greater than at table `t`
-                if (chosenTable.TakenSeats.Count > t.TakenSeats.Count)
-                {
+                if (chosenTable.TakenSeats.Count > t.TakenSeats.Count) {
                     // Set the chosen table to be the table `t`
                     chosenTable = t;
                 }
             }
-            
+
             // If the choosen table had no seats available
-            if (chosenTable.AvailableSeats.Count == 0)
-            {
+            if (chosenTable.AvailableSeats.Count == 0) {
+
                 // If there is no table available continue walking to the stage
                 AgentChangeStage();
 
@@ -360,9 +360,9 @@ public class NPCBehaviour : MonoBehaviour
             // The agent will move after choosing a table
             agent.isStopped = false;
 
-        } // If the agent has't reached the objective yet
-        else if (Vector3.Distance(transform.position, currentEatingArea.position) >= 1.8f)
-        {
+        // If the agent has't reached the objective yet 
+        } else if (Vector3.Distance(transform.position, currentEatingArea.position) >= 1.8f) {
+
             // The agent will move after choosing a table
             agent.isStopped = false;
 
@@ -372,10 +372,9 @@ public class NPCBehaviour : MonoBehaviour
             // The agent can't be resting if he's going to eat
             isResting = false;
 
-        } // If we've reached the destination and our `fullnessLevel` is less than the maximum
-        else if (Vector3.Distance(transform.position, currentEatingArea.position) <= 1.8f && 
-            fullnessLevel < maximumFullnessLevel)
-        {
+        // If we've reached the destination and our `fullnessLevel` is less than the maximum
+        } else if (Vector3.Distance(transform.position, currentEatingArea.position) <= 1.8f &&
+            fullnessLevel < maximumFullnessLevel) {
             // The agent is eating so he doesn't move
             agent.isStopped = true;
 
@@ -387,9 +386,8 @@ public class NPCBehaviour : MonoBehaviour
                 fullnessLevel + ((fullnessSpet * multiplier) * Time.deltaTime),
                 maximumFullnessLevel);
 
-        }   // If the `fullnessLevel` is at maximum
-        else if (fullnessLevel >= maximumFullnessLevel)
-        {
+        // If the `fullnessLevel` is at maximum
+        } else if (fullnessLevel >= maximumFullnessLevel) {
             // The agent is not eating so he can move
             agent.isStopped = false;
 
@@ -419,11 +417,10 @@ public class NPCBehaviour : MonoBehaviour
     /// <summary>
     /// Makes the agent go rest till he's got stamina again
     /// </summary>
-    private void AgentGoRest()
-    {
+    private void AgentGoRest() {
+
         // If we don't currently have a resting area assigned
-        if (currentRestingArea == null)
-        {
+        if (currentRestingArea == null) {
 
             // Choses randomly between the two available resting areas
             // And selects a random position on it's collider
@@ -434,16 +431,14 @@ public class NPCBehaviour : MonoBehaviour
             // Sets the agent destination to be that resting area
             agent.SetDestination(currentRestingArea.Value);
 
-        } 
-        else if (Vector3.Distance(transform.position, currentRestingArea.Value) > 2f) 
-        {
+        } else if (Vector3.Distance(transform.position, currentRestingArea.Value) > 2f) {
             // Sets the agent destination to be that resting area
             agent.SetDestination(currentRestingArea.Value);
 
-        }// If we've reached the destination and our `staminaLevel` is less than the maximum
-        else if (Vector3.Distance(transform.position, currentRestingArea.Value) < 2f &&
-            staminaLevel < maximumStaminaLevel)
-        {
+        // If we've reached the destination and our `staminaLevel` is less than the maximum
+        } else if (Vector3.Distance(transform.position, currentRestingArea.Value) < 2f &&
+              staminaLevel < maximumStaminaLevel) {
+
             // We're currently resting
             isResting = true;
 
@@ -452,9 +447,9 @@ public class NPCBehaviour : MonoBehaviour
                 staminaLevel + ((staminaStep * multiplier) * Time.deltaTime),
                 maximumStaminaLevel);
 
-        }   // If the `staminaLevel` is at maximum
-        else if (staminaLevel >= maximumStaminaLevel)
-        {
+        // If the `staminaLevel` is at maximum
+        } else if (staminaLevel >= maximumStaminaLevel) {
+
             // Set the `currentRestingArea` to null
             currentRestingArea = null;
 
@@ -478,32 +473,31 @@ public class NPCBehaviour : MonoBehaviour
     /// <summary>
     /// Makes the agent go to another stage
     /// </summary>
-    private void AgentChangeStage()
-    {
+    private void AgentChangeStage() {
         // Get a new random float between 1 and 100
         float stageSelect = Random.Range(1, 100);
 
         // If the current stage is null
-        if (currentStage == null)
-        {
+        if (currentStage == null) {
+
             // Select one of the three stages, with the bigger ones having a higher chance
             currentStage = stageSelect > 60 ? stages[0] : stageSelect > 28 ? stages[1] : stages[2];
 
             // Move the agent to the current stage
             agent.SetDestination(currentStage.position);
 
-        } // If the agent has't reached the objective yet
-        else if (Vector3.Distance(transform.position, currentStage.position) > 2.5f)
-        {
+        // If the agent has't reached the objective yet
+        } else if (Vector3.Distance(transform.position, currentStage.position) > 2.5f) {
+
             // If the agent has not reached the stage he will move
             agent.isStopped = false;
 
             // Move the agent to the current stage
             agent.SetDestination(currentStage.position);
 
-        } // If the distance from the agent to the target position is less than 3
-        else if (Vector3.Distance(transform.position, currentStage.position) < 2.5f)
-        {
+        // If the distance from the agent to the target position is less than 3
+        } else if (Vector3.Distance(transform.position, currentStage.position) < 2.5f) {
+
             // The agent has reached the stage
             HasReachedStage = true;
 
@@ -515,9 +509,9 @@ public class NPCBehaviour : MonoBehaviour
 
             // If the agent has reached the stage he will stop moving
             agent.isStopped = true;
-        }
-        else if (HasReachedStage)
-        {
+
+        } else if (HasReachedStage) {
+
             // If the agent has reached the stage he will stop moving
             agent.isStopped = true;
 
@@ -532,8 +526,8 @@ public class NPCBehaviour : MonoBehaviour
     /// <summary>
     /// Decrease the current excitement level by `excitementStep` each second
     /// </summary>
-    private void UpdateExcitementLevel()
-    {
+    private void UpdateExcitementLevel() {
+
         // Clamp the excitement level between 0 and `maximumExcitementLevel`
         excitementLevel = Mathf.Clamp(
             excitementLevel - (excitementStep * Time.deltaTime),
@@ -543,8 +537,8 @@ public class NPCBehaviour : MonoBehaviour
     /// <summary>
     /// Decrease the current stamina level by `staminaStep` each second
     /// </summary>
-    private void UpdateStaminaLevel()
-    {
+    private void UpdateStaminaLevel() {
+
         // Clamp the stamina level between 0 and `maximumStaminaLevel`
         staminaLevel = Mathf.Clamp(
             staminaLevel - (staminaStep * Time.deltaTime),
@@ -554,8 +548,8 @@ public class NPCBehaviour : MonoBehaviour
     /// <summary>
     /// Decrease the current fullness level by `fullnessStep` each second
     /// </summary>
-    private void UpdateFullness()
-    {
+    private void UpdateFullness() {
+
         // Clamp the fullness level between 0 and `maximumFullnessLevel`
         fullnessLevel = Mathf.Clamp(
             fullnessLevel - (fullnessSpet * Time.deltaTime),
@@ -566,17 +560,17 @@ public class NPCBehaviour : MonoBehaviour
     /// Called when the agent collides with another agent
     /// </summary>
     /// <param name="other">The collider of the other agent</param>
-    private void OnCollisionEnter(Collision other)
-    {
+    private void OnCollisionEnter(Collision other) {
+
         // If the agent collided with another npc and that npc is active
-        if (other.transform.CompareTag("NPC") && gameObject.activeSelf)
-        {
+        if (other.transform.CompareTag("NPC") && gameObject.activeSelf) {
+
             // And that npc is on a stage
-            if (other.transform.GetComponent<NPCBehaviour>().HasReachedStage)
-            {
+            if (other.transform.GetComponent<NPCBehaviour>().HasReachedStage) {
+
                 // If the agent is not yet on a stage
-                if (!HasReachedStage)
-                {
+                if (!HasReachedStage) {
+
                     // Start a corroutine
                     StartCoroutine(StopPushing());
                 }
@@ -589,14 +583,14 @@ public class NPCBehaviour : MonoBehaviour
     /// </summary>
     /// <param name="other">The Collider we hit</param>
     private void OnTriggerEnter(Collider other) {
-        
+
         // If the Collider the agent hit is another NPC and this agent is panicking
         if (other.CompareTag("NPC") && IsPanicking) {
 
             // Set the other NPC as panicking aswell
             other.GetComponent<NPCBehaviour>().IsPanicking = true;
 
-        // If the Collider the agent hit is an Exit
+            // If the Collider the agent hit is an Exit
         } else if (other.CompareTag("Exit")) {
 
             // Disable the agent
@@ -608,14 +602,14 @@ public class NPCBehaviour : MonoBehaviour
     /// Makes the agent stop pushing forawrd after some time
     /// </summary>
     /// <returns>Waits for some seconds</returns>
-    private IEnumerator StopPushing()
-    {
+    private IEnumerator StopPushing() {
+
         // Waits for some seconds
         yield return pushFor;
 
         // If the agent is currently moving towards a stage
-        if (currentStage != null && agent.destination == currentStage.position)
-        {
+        if (currentStage != null && agent.destination == currentStage.position) {
+
             // The agent has reached the stage
             HasReachedStage = true;
         }
@@ -626,8 +620,8 @@ public class NPCBehaviour : MonoBehaviour
     /// </summary>
     /// <param name="bounds">The bounds of the collider</param>
     /// <returns>A Vector3 with a random position</returns>
-    public Vector3 GetRandomPointInBounds(Bounds bounds)
-    {
+    public Vector3 GetRandomPointInBounds(Bounds bounds) {
+
         return new Vector3(
             Random.Range(bounds.min.x, bounds.max.x),
             0f,

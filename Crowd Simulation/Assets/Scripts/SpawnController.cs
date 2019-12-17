@@ -4,13 +4,14 @@ using UnityEngine;
 /// <summary>
 /// Class that spawns NPCs
 /// </summary>
-public class SpawnController : MonoBehaviour
-{
+public class SpawnController : MonoBehaviour {
+
     // Pool of agents
     [SerializeField] private AgentPool pool;
 
     // How many agents we want to spawn
-    [Range(100, 500)] [SerializeField]
+    [Range(100, 500)]
+    [SerializeField]
     private float nAgentsToSpawn;
 
     // How long to wait between each spawn
@@ -23,8 +24,8 @@ public class SpawnController : MonoBehaviour
     private WaitForSeconds waitDelay;
 
     // Start is called before the first frame update
-    void Start()
-    {
+    void Start() {
+
         // Set the spawn delay to be 0.5 seconds;
         waitDelay = new WaitForSeconds(spawnDelay);
 
@@ -38,11 +39,11 @@ public class SpawnController : MonoBehaviour
     /// Spawn each agent with a small delay
     /// </summary>
     /// <returns>Wait a certain amount of time to spawn the next agent</returns>
-    private IEnumerator SpawnAgents()
-    {
+    private IEnumerator SpawnAgents() {
+
         // Go through our pool of agents
-        for (int i = 0; i < nAgentsToSpawn; i++ )
-        {
+        for (int i = 0; i < nAgentsToSpawn; i++) {
+
             // Select a random spawn point to spawn the agent
             pool.Agents[i].transform.position = spawnPoints[Random.Range(1, spawnPoints.Length)].position;
 
