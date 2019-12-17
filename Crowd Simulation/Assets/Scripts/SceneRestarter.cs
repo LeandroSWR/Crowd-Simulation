@@ -1,7 +1,14 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// Holds a method responsible for restarting the simulation
+/// </summary>
 public class SceneRestarter : MonoBehaviour {
 
-    public void RestartScene() => SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    /// <summary>
+    /// Restarts the Simulation
+    /// </summary>
+    public void RestartScene() => 
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 }

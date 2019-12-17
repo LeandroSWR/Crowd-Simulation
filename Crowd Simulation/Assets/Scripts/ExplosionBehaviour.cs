@@ -1,7 +1,9 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Class responsible for all explosion behaviours
+/// </summary>
 public class ExplosionBehaviour : MonoBehaviour {
 
     // The Explosions speeds
@@ -12,7 +14,6 @@ public class ExplosionBehaviour : MonoBehaviour {
     private float killRadius;  // The radius at which NPC's get killed
     private float stunRadius;  // The radius at which NPC's get stunned
     private float panicRadius; // The radius at which NPC's start panicking
-    private float maxRadius;   // The radius at which this explosion gets destroyed
 
     // The scale to be applied
     private Vector3 desiredScale;
@@ -52,7 +53,7 @@ public class ExplosionBehaviour : MonoBehaviour {
     /// <param name="stunRadius">The radius to stun NPCs</param>
     /// <param name="panicRadius">The radius for the NPCs to panic</param>
     public void AssignVariables(float explosionSpeed, float fireSpeed, 
-        float killRadius, float stunRadius, float panicRadius, float maxRadius,
+        float killRadius, float stunRadius, float panicRadius,
         ExplosionManager explosionManager) {
 
         this.explosionSpeed = explosionSpeed;
@@ -60,7 +61,6 @@ public class ExplosionBehaviour : MonoBehaviour {
         this.killRadius = killRadius;
         this.stunRadius = stunRadius;
         this.panicRadius = panicRadius;
-        this.maxRadius = maxRadius;
 
         this.explosionManager = explosionManager;
     }
@@ -73,7 +73,7 @@ public class ExplosionBehaviour : MonoBehaviour {
     private void SpreadFire() {
 
         // Save this explosion radius
-        currentRadius = desiredScale.x;
+        currentRadius = desiredScale.x / 2.0f;
 
         // If our current radius is less than the one to kill NPCs...
         if (currentRadius < killRadius) {
@@ -81,18 +81,11 @@ public class ExplosionBehaviour : MonoBehaviour {
             // ...Increase the radius with the appropriate speed
             desiredScale += Vector3.one * (Time.deltaTime * explosionSpeed);
 
-        // If the current radius is bigger or equals the radius to kill NPCs
-        // but it's smaller than the maximum one...
-        } else if (currentRadius >= killRadius && currentRadius < maxRadius) {
+        // If the current radius is bigger or equals the radius to kill NPCs...
+        } else {
 
-            // ...Increase the radius with the appropriate speed
+            // ...Increase the radius with a faster speed
             desiredScale += Vector3.one * (Time.deltaTime * fireSpeed);
-
-        // If the current radius is bigger or equals the maximum radius...
-        } else if (currentRadius >= maxRadius) {
-
-            // ...Destroy this explosion GameObject
-            Destroy(gameObject);
         }
 
         // Apply the correct scale on the 'y' axis (by resetting it)
@@ -107,8 +100,8 @@ public class ExplosionBehaviour : MonoBehaviour {
     /// </summary>
     public void Explode() {
 
-        // Gets all colliders around this GameObject
-        Collider[] npcs = Physics.OverlapSphere(transform.position, maxRadius);
+        // Gets all colliders around this GameObject (with a big enough radius)
+        Collider[] npcs = Physics.OverlapSphere(transform.position, 500);
 
         // Iterates through all Colliders found...
         foreach(Collider c in npcs) {
@@ -120,15 +113,17 @@ public class ExplosionBehaviour : MonoBehaviour {
                 NPCBehaviour npc = c.GetComponent<NPCBehaviour>();
 
                 // ...if the distance is smaller than the kill radius on the moment of the explosion...
-                if (Vector3.Distance(transform.position, c.transform.position) <= killRadius) {
+                if (Vector3.Distance(transform.position, npc.transform.position) <= killRadius) {
 
                     // ...'kill' the npc...
                     npc.IsDead = true;
 
-                    // ...and update the UI display
+                    // ...and update the UI display...
                     explosionManager.UpdateKillCount();
 
-                // ...if the distance is smaller than the stun radius on the moment of the explosion...
+                    StartCoroutine(NPCAddForce(npc, 500, 100));
+
+                    // ...if the distance is smaller than the stun radius on the moment of the explosion...
                 } else if (Vector3.Distance(transform.position, npc.transform.position) <= stunRadius) {
 
                     // ...set its stun time...
@@ -163,8 +158,8 @@ public class ExplosionBehaviour : MonoBehaviour {
             NPCBehaviour npc = other.GetComponent<NPCBehaviour>();
 
             // If the distance between the Explosion and the NPC is smaller (or equal)
-            // that that of the current explosion radius...
-            if (Vector3.Distance(transform.position, npc.transform.position) <= panicRadius) {
+            // than that of the current explosion radius...
+            if (Vector3.Distance(transform.position, npc.transform.position) <= currentRadius) {
 
                 // Verify if the NPC is already dead
                 if (!npc.IsDead) {
@@ -176,38 +171,75 @@ public class ExplosionBehaviour : MonoBehaviour {
                     explosionManager.UpdateKillCount();
                 }
 
-            // If the distance between the Explosion and the NPC is bigger
-            // than that of the current explosion radius...
+                // If the distance between the Explosion and the NPC is bigger
+                // than that of the current explosion radius...
             } else {
 
-                // ...set its stun time as 0 (so it starts running immediatelly 
-                // but with half its original speed)...
-                npc.StunTime = 0.0f;
-
-                // ...set the npc as Stunned...
-                npc.IsStunned = true;
-
-                // ...and also as Panicking
+                // ...set the npc as Panicking
                 npc.IsPanicking = true;
             }
         }
     }
 
-    //private void OnDrawGizmos() {
+    /// <summary>
+    /// OnTriggerStay is called almost all the frames for every Collider other that is touching the trigger.
+    /// </summary>
+    /// <param name="other">The Collider we're hitting</param>
+    private void OnTriggerStay(Collider other) {
 
-    //    Gizmos.color = Color.red;
-    //    Gizmos.DrawWireSphere(transform.position, panicRadius);
+        // If the 'other' Collider has an 'NPC' tag...
+        if (other.CompareTag("NPC")) {
 
-    //    Gizmos.color = Color.yellow;
-    //    Gizmos.DrawWireSphere(transform.position, stunRadius);
+            // ...fetch its NPC Behaviour script...
+            NPCBehaviour npc = other.GetComponent<NPCBehaviour>();
 
-    //    Gizmos.color = Color.green;
-    //    Gizmos.DrawWireSphere(transform.position, killRadius);
+            // If the distance between the Explosion and the NPC is smaller (or equal)
+            // than that of the current explosion radius...
+            if (Vector3.Distance(transform.position, npc.transform.position) <= currentRadius) {
 
-    //    Gizmos.color = Color.black;
-    //    Gizmos.DrawWireSphere(transform.position, maxRadius);
+                // Verify if the NPC is already dead
+                if (!npc.IsDead) {
 
-    //    Gizmos.color = Color.white;
-    //    Gizmos.DrawWireSphere(transform.position, currentRadius);
-    //}
+                    // ...'kill' the NPC...
+                    npc.IsDead = true;
+
+                    // ...and update the UI display
+                    explosionManager.UpdateKillCount();
+
+                    StartCoroutine(NPCAddForce(npc, 500, 0));
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Applies forces to an NPC when hit by an explosion
+    /// </summary>
+    /// <param name="npc">The NPC we hit</param>
+    /// <param name="explosionForce">The explosion force</param>
+    /// <param name="verticalForce">The vertical explosion force</param>
+    /// <returns>Skips 1 frame</returns>
+    private IEnumerator NPCAddForce(NPCBehaviour npc, float explosionForce, float verticalForce) {
+
+        // Waits for the next frame
+        yield return 0;
+
+        // Adds an explosion force based on the center of the explosion
+        npc.GetComponent<Rigidbody>().AddExplosionForce(explosionForce, transform.position, killRadius, verticalForce, ForceMode.Acceleration);
+    }
+
+    private void OnDrawGizmos() {
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, panicRadius);
+
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, stunRadius);
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(transform.position, killRadius);
+
+        Gizmos.color = Color.white;
+        Gizmos.DrawWireSphere(transform.position, currentRadius);
+    }
 }

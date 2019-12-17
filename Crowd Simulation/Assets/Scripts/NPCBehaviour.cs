@@ -73,6 +73,9 @@ public class NPCBehaviour : MonoBehaviour
     // Reference to our Nav Mesh Agent
     private NavMeshAgent agent;
 
+    // Reference to our Rigidbody
+    private Rigidbody rigidbody;
+
     // Action and Decision Nodes \\
 
     // Decision node if the agent is hungry
@@ -161,6 +164,9 @@ public class NPCBehaviour : MonoBehaviour
         // Initialize `agent` by getting the NavMeshAgent component
         agent = GetComponent<NavMeshAgent>();
 
+        // Fetch our Rigidbody component component
+        rigidbody = GetComponent<Rigidbody>();
+
         // Assign this speed as the agent's speed
         agent.speed = speed;
 
@@ -175,9 +181,6 @@ public class NPCBehaviour : MonoBehaviour
 
         // Initialize the `HasReachedStage` as false
         HasReachedStage = false;
-
-        // Set the agent as not dead, in case it had already died
-        IsDead = false;
 
         // Define the initial values for the excitement level
         excitementLevel = 0f;
@@ -229,8 +232,11 @@ public class NPCBehaviour : MonoBehaviour
     /// </summary>
     private void Die() {
 
-        // Disables the agent's GameObject
-        gameObject.SetActive(false);
+        GetComponent<NPCBehaviour>().enabled = false;
+        GetComponent<NavMeshAgent>().enabled = false;
+
+        rigidbody.isKinematic = false;
+        rigidbody.useGravity = true;
     }
 
     /// <summary>
@@ -555,8 +561,8 @@ public class NPCBehaviour : MonoBehaviour
     /// <param name="other">The collider of the other agent</param>
     private void OnCollisionEnter(Collision other)
     {
-        // If the agent collided with another npc
-        if (other.transform.CompareTag("NPC"))
+        // If the agent collided with another npc and that npc is active
+        if (other.transform.CompareTag("NPC") && gameObject.activeSelf)
         {
             // And that npc is on a stage
             if (other.transform.GetComponent<NPCBehaviour>().HasReachedStage)

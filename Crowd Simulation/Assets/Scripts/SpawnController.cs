@@ -1,6 +1,9 @@
 ﻿using System.Collections;
 using UnityEngine;
 
+/// <summary>
+/// Class that spawns NPCs
+/// </summary>
 public class SpawnController : MonoBehaviour
 {
     // Pool of agents

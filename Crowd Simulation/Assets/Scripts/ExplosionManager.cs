@@ -1,8 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// Class responsible for spawning explosions
+/// </summary>
 public class ExplosionManager : MonoBehaviour {
 
     [Header("Key")]
@@ -19,7 +21,6 @@ public class ExplosionManager : MonoBehaviour {
     [SerializeField] private float killRadius;  // The radius at which NPC's get killed
     [SerializeField] private float stunRadius;  // The radius at which NPC's get stunned
     [SerializeField] private float panicRadius; // The radius at which NPC's start panicking
-    [SerializeField] private float maxRadius;   // The radius at which the Explosions stop
 
     [Header("Timer")]
     // The Stun time to be applied if necessary
@@ -105,7 +106,7 @@ public class ExplosionManager : MonoBehaviour {
             Quaternion.identity).GetComponent<ExplosionBehaviour>();
 
         // Pass variables from this script towards the last explosion
-        eb.AssignVariables(explosionSpeed, fireSpeed, killRadius, stunRadius, panicRadius, maxRadius, this);
+        eb.AssignVariables(explosionSpeed, fireSpeed, killRadius, stunRadius, panicRadius, this);
 
         // Activate the explosion
         eb.Explode();
